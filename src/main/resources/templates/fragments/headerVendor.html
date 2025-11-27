@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+
+<header th:fragment="VendorHeader(currentPage)">
+    <a href="/static" class="logo">ShopFlow</a>
+    <div class="nav-links">
+        <a th:href="@{/vendor/products}"
+           th:classappend="${currentPage.endsWith('/vendor/products') ? 'active' : ''}">
+            My Products
+        </a>
+        <a th:href="@{/vendor/orders}"
+           th:classappend="${currentPage.endsWith('/vendor/orders') ? 'active' : ''}">
+            Orders
+        </a>
+        <a th:href="@{/vendor/profile}"
+           th:classappend="${currentPage.endsWith('/vendor/profile') ? 'active' : ''}">
+            Profile
+        </a>
+        <span class="badge">VENDOR</span>
+    </div>
+</header>
+</body>
+</html>

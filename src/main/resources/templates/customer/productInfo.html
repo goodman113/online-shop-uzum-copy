@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="uz" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${product.name}">Бумага Svetocopy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --purple: #7000ff;
+            --pink: #e91e63;
+            --gray: #666;
+            --light: #f8f9fa;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:#fff; color:#1c1c1c; line-height:1.5; }
+
+        .container { max-width:1400px; margin:0 auto; padding:20px; }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            font-size:14px; color:#999; margin-bottom:16px;
+        }
+        .breadcrumb a { color:#7000ff; text-decoration:none; }
+
+        /* Main Layout */
+        .product-layout {
+            display:grid;
+            grid-template-columns: 1fr 420px;
+            gap:40px;
+            margin-top:20px;
+        }
+
+        /* Left: Images */
+        .gallery {
+            display:flex;
+            flex-direction:column;
+            gap:16px;
+        }
+        .main-img {
+            width:100%;
+            height:560px;
+            object-fit:contain;
+            background:#f8f9fa;
+            border-radius:16px;
+            box-shadow:0 4px 20px rgba(0,0,0,0.08);
+        }
+        .thumbnails {
+            display:grid;
+            grid-template-columns:repeat(6, 1fr);
+            gap:12px;
+        }
+        .thumb {
+            height:90px;
+            object-fit:cover;
+            border-radius:12px;
+            cursor:pointer;
+            border:2px solid transparent;
+            transition:all .2s;
+        }
+        .thumb.active, .thumb:hover {
+            border-color:var(--purple);
+        }
+
+        /* Right: Info */
+        .info-card {
+            background:#fff;
+            border-radius:16px;
+            padding:24px;
+            box-shadow:0 2px 20px rgba(0,0,0,0.06);
+            height:fit-content;
+            position:sticky;
+            top:100px;
+        }
+
+        .product-title {
+            font-size:28px;
+            font-weight:700;
+            margin-bottom:12px;
+        }
+
+        .rating-row {
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin-bottom:16px;
+            font-size:15px;
+        }
+        .stars { color:#f59e0b; }
+        .reviews-count { color:var(--purple); font-weight:600; }
+        .sales-info { color:#666; }
+
+        .discount-badge {
+            background:#ffeb3b;
+            color:#000;
+            padding:4px 10px;
+            border-radius:20px;
+            font-weight:700;
+            font-size:13px;
+            display:inline-block;
+            margin-bottom:12px;
+        }
+
+        .price-box {
+            background:#f8f9fa;
+            padding:20px;
+            border-radius:16px;
+            margin:20px 0;
+        }
+        .old-price {
+            font-size:18px;
+            color:#999;
+            text-decoration:line-through;
+        }
+        .current-price {
+            font-size:36px;
+            font-weight:800;
+            color:#000;
+            margin:8px 0;
+        }
+        .installment {
+            font-size:14px;
+            color:#666;
+        }
+
+        .installment-options {
+            display:flex;
+            gap:8px;
+            margin:16px 0;
+            flex-wrap:wrap;
+        }
+        .installment-btn {
+            padding:8px;
+            padding:8px 16px;
+            background:#fff;
+            border:1px solid #ddd;
+            border-radius:12px;
+            font-size:14px;
+            cursor:pointer;
+        }
+        .installment-btn.active {
+            background:var(--purple);
+            color:#fff;
+            border-color:var(--purple);
+        }
+
+        .one-click-buy {
+            background:#f0f0ff;
+            color:var(--purple);
+            padding:14px;
+            border-radius:12px;
+            text-align:center;
+            font-weight:600;
+            margin:16px 0;
+            cursor:pointer;
+        }
+
+        .add-to-cart-btn {
+            background:linear-gradient(90deg, #7000ff, #a855f7);
+            color:#fff;
+            border:none;
+            padding:16px;
+            border-radius:16px;
+            font-size:18px;
+            font-weight:600;
+            width:100%;
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+        }
+
+        .stock-info {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            color:#16a34a;
+            font-weight:600;
+            margin:16px 0;
+        }
+
+        .weekly-sales {
+            background:#fff8e1;
+            padding:12px;
+            border-radius:12px;
+            font-size:14px;
+            color:#d97706;
+        }
+
+        /* Description & Reviews below */
+        .description {
+            margin-top:60px;
+            line-height:1.7;
+            color:#444;
+        }
+
+        @media (max-width:992px) {
+            .product-layout { grid-template-columns:1fr; }
+            .info-card { position:static; }
+            .main-img { height:400px; }
+        }
+    </style>
+</head>
+<body>
+<div th:replace="fragments/productHeader :: productHeader(${currentWebPage})"></div>
+
+
+<div class="container">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="/">Главная</a> →
+        <a href="/catalog">Все категории</a> →
+        <a href="#" th:text="${product.subSubCategoryDto.subCategoryDto.categoryDto.name}">Канцтовары</a> →
+        <a href="#" th:text="${product.subSubCategoryDto.subCategoryDto.name}">Бумажная продукция</a> →
+        <a href="#" th:text="${product.subSubCategoryDto.name}">Бумага для печати</a>
+    </div>
+
+    <h1 class="product-title" th:text="${product.name}">
+        Бумага листовая Svetocopy ECO, A4ф, 80г/м2, 500 листов
+    </h1>
+
+    <div class="product-layout">
+
+        <!-- Left: Gallery -->
+        <div class="gallery">
+            <img id="mainImg"
+                 th:src="${product.imageProducts != null && !product.imageProducts.isEmpty()}
+                          ? ${product.imageProducts[0].path}
+                          : '/images/no-image.jpg'"
+                 alt="Main" class="main-img">
+
+            <div class="thumbnails">
+                <img th:each="img, iter : ${product.imageProducts}"
+                     th:src="${img.path}"
+                     th:alt="${img.originalName}"
+                     th:classappend="${iter.index == 0} ? 'thumb active' : 'thumb'"
+                     onclick="changeMain(this)"
+                     class="thumb">
+            </div>
+        </div>
+
+        <!-- Right: Buy Box -->
+        <div class="info-card">
+            <div class="rating-row">
+                <span class="stars">
+                    <!-- Define safe rating (0.0 if null) -->
+                    <th:block th:with="rating=${product.averageRating != null ? product.averageRating : 0.0}">
+
+                        <!-- Full Stars -->
+                        <span th:each="i : ${#numbers.sequence(1, T(java.lang.Math).floor(rating))}">
+                            ⭐
+                        </span>
+
+                        <!-- Half Star -->
+                        <span th:if="${rating % 1 >= 0.5}">
+                            ⯪
+                        </span>
+
+                        <!-- Empty Stars -->
+                        <span th:each="i : ${#numbers.sequence(1, 5 - T(java.lang.Math).ceil(rating))}">
+                            ☆
+                        </span>
+
+                    </th:block>
+                </span>
+
+                <!-- Show rating or 0.0 -->
+                <span th:text="${product.averageRating != null ? product.averageRating : '0.0'}"></span>
+
+                <a href="#reviews" class="reviews-count"
+                   th:text="'(' + ${#lists.size(product.reviews)} + ' отзывов)'">
+                </a>
+            </div>
+
+
+            <div class="discount-badge" th:if="${product.oldPrice != null}">-43%</div>
+
+            <div class="price-box">
+                <div class="old-price" th:if="${product.oldPrice != null}"
+                     th:text="${#numbers.formatDecimal(product.oldPrice, 0, 0)} + ' сум'">37 610 сум</div>
+
+                <div class="current-price"
+                     th:text="${#numbers.formatDecimal(product.price, 0, 0)} + ' сум'">
+                    37 233 сум
+                </div>
+
+                <div class="installment" th:if="${product.price > 100000}">
+                    от <strong th:text="${#numbers.formatDecimal(product.price / 24, 0, 0)}">1 551</strong> сум/мес
+                </div>
+
+                <div class="installment-options">
+                    <button class="installment-btn active">24 мес</button>
+                    <button class="installment-btn">12 мес</button>
+                    <button class="installment-btn">6 мес</button>
+                    <button class="installment-btn">3 мес</button>
+                </div>
+
+                <div class="one-click-buy">
+                    Купить в 1 клик
+                </div>
+
+                <button class="add-to-cart-btn">
+                    Добавить в корзину
+                </button>
+
+                <div class="stock-info">
+                    Можно купить 1632 шт
+                </div>
+
+                <div class="weekly-sales">
+                    443 человека купили на этой неделе
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description -->
+    <div class="description" th:utext="${product.description}">
+        Экологичная офисная бумага премиум-класса Svetocopy ECO формата A4, плотность 80 г/м², 500 листов в пачке...
+    </div>
+</div>
+
+<script>
+    function changeMain(thumb) {
+        document.getElementById('mainImg').src = thumb.src;
+        document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ali Market - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+
+        /* Header */
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 15px 40px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 28px; font-weight: 800; color: #7c3aed; letter-spacing: -1px; }
+        .logo span { color: #a78bfa; }
+
+        /* Center Nav */
+        .center-nav { display: flex; align-items: center; gap: 20px; flex: 1; justify-content: center; max-width: 600px; }
+        .categories-btn { background: #7c3aed; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.3s; }
+        .categories-btn:hover { background: #6d28d9; transform: translateY(-2px); }
+
+        /* Search */
+        .search-container { display: flex; flex: 1; max-width: 600px; }
+        .search-container input { flex: 1; padding: 12px 20px; border: 2px solid #e5e7eb;max-width:100%; border-right: none; border-radius: 8px 0 0 8px; font-size: 14px; outline: none; transition: border-color 0.3s; }
+        .search-container input:focus { border-color: #7c3aed; }
+        .search-btn { background: #7c3aed; border: none; padding: 12px 20px; border-radius: 0 8px 8px 0; cursor: pointer; color: #fff; transition: background 0.3s; }
+        .search-btn:hover { background: #6d28d9; }
+
+        /* Right Nav */
+        .right-nav { display: flex; align-items: center; gap: 25px; }
+        .nav-icon { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #374151; cursor: pointer; transition: color 0.3s; text-decoration: none; }
+        .nav-icon:hover { color: #7c3aed; }
+        .nav-icon i { font-size: 22px; }
+        .nav-icon span { font-size: 11px; font-weight: 500; }
+        .cart-badge { position: relative; }
+        .cart-badge::after { content: attr(data-count); position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 50%; }
+
+        /* Sidebar */
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: all 0.3s; z-index: 200; }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+        .sidebar { position: fixed; top: 0; left: -320px; width: 320px; height: 100%; background: #fff; transition: left 0.3s; z-index: 201; overflow-y: auto; }
+        .sidebar.active { left: 0; }
+        .sidebar-header { padding: 20px; background: #7c3aed; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h3 { font-size: 18px; }
+        .close-sidebar { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+
+        /* Category Items */
+        .category-item { border-bottom: 1px solid #f3f4f6; }
+        .category-link { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; transition: background 0.2s; }
+        .category-link:hover { background: #f9fafb; color: #7c3aed; }
+        .category-link.active { background: #7c3aed; color: #fff; }
+        .subcategory-menu { position: fixed; left: 320px; top: 0; width: 280px; height: 100%; background: #fff; box-shadow: 4px 0 15px rgba(0,0,0,0.1); display: none; overflow-y: auto; z-index: 202; }
+        .subcategory-menu.active { display: block; }
+        .subcategory-menu-header { padding: 20px; background: #f3f4f6; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; }
+        .subcategory-item { border-bottom: 1px solid #f3f4f6; }
+        .subcategory-link { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; cursor: pointer; transition: background 0.2s; }
+        .subcategory-link:hover { background: #f9fafb; color: #7c3aed; }
+        .subcategory-link.active { background: #7c3aed; color: #fff; }
+        .subsubcategory-menu { position: fixed; left: 600px; top: 0; width: 250px; height: 100%; background: #fff; box-shadow: 4px 0 15px rgba(0,0,0,0.1); display: none; overflow-y: auto; z-index: 203; }
+        .subsubcategory-menu.active { display: block; }
+        .subsubcategory-menu-header { padding: 20px; background: #f3f4f6; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; }
+        .subsubcategory-link { display: block; padding: 12px 20px; color: #374151; text-decoration: none; transition: all 0.2s; border-bottom: 1px solid #f3f4f6; }
+        .subsubcategory-link:hover { background: #7c3aed; color: #fff; }
+
+        /* Products Grid */
+        .products-section { padding: 30px 40px; }
+        .section-title { font-size: 24px; font-weight: 700; color: #1f2937; margin-bottom: 25px; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
+
+        /* Product Card */
+        .product-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: all 0.3s; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
+        .product-image { position: relative; height: 220px; overflow: hidden; cursor: pointer; }
+        .product-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .product-card:hover .product-image img { transform: scale(1.05); }
+        .wishlist-btn { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; background: #fff; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.3s; }
+        .wishlist-btn i { font-size: 18px; color: #9ca3af; transition: color 0.3s; }
+        .wishlist-btn.active i { color: #ef4444; }
+        .wishlist-btn:hover { transform: scale(1.1); }
+        .old-price-badge { position: absolute; top: 12px; left: 12px; background: #ef4444; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+        /* Product Info */
+        .product-info { padding: 18px; }
+        .product-name { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-rating { display: flex; align-items: center; gap: 5px; margin-bottom: 10px; }
+        .stars { color: #fbbf24; font-size: 14px; }
+        .rating-value { color: #6b7280; font-size: 13px; }
+        .product-price { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .current-price { font-size: 20px; font-weight: 700; color: #7c3aed; }
+        .old-price { font-size: 14px; color: #9ca3af; text-decoration: line-through; }
+
+        /* Buy Button */
+        .buy-btn { width: 100%; padding: 12px; background: #7c3aed; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .buy-btn:hover { background: #6d28d9; }
+
+        /* Quantity Controls */
+        .quantity-controls { display: flex; align-items: center; justify-content: center; gap: 15px; background: #f3f4f6; border-radius: 8px; padding: 8px; }
+        .qty-btn { width: 36px; height: 36px; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: 600; transition: all 0.2s; }
+        .qty-btn.minus { background: #fee2e2; color: #ef4444; }
+        .qty-btn.minus:hover { background: #fecaca; }
+        .qty-btn.plus { background: #7c3aed; color: #fff; }
+        .qty-btn.plus:hover { background: #6d28d9; }
+        .qty-value { font-size: 18px; font-weight: 700; color: #1f2937; min-width: 30px; text-align: center; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<!-- Header -->
+
+<header class="header">
+    <div class="logo">Ali <span>Market</span></div>
+    <div class="center-nav">
+        <button class="categories-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i> Categories
+        </button>
+        <div class="search-container">
+            <form method="get" action="/" style="max-width: 600px;">
+                <input type="text" name="name" placeholder="Search products..." id="searchInput" th:value="${param.name}">
+                <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
+    </div>
+    <div class="right-nav">
+        <a href="/login" class="nav-icon">
+            <i class="fas fa-user"></i>
+            <span>Login</span>
+        </a>
+        <a href="/wishlist" class="nav-icon">
+            <i class="fas fa-heart"></i>
+            <span>Wishlist</span>
+        </a>
+        <a href="/cart" class="nav-icon cart-badge" data-count="0" id="cartBadge">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Cart</span>
+        </a>
+    </div>
+</header>
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- Categories Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <h3>Categories</h3>
+        <button class="close-sidebar" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="categories-list">
+        <!-- Thymeleaf loop for Map<CategoryDto, List<SubCategoryDto>> -->
+        <div class="category-item" th:each="entry, catStat : ${categories}">
+            <div class="category-link" th:data-index="${catStat.index}" th:data-name="${entry.key.name}" onclick="toggleCategory(this)">
+                <span th:text="${entry.key.name}">Electronics</span>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="subcategory-menu" th:id="'subcategory-menu-' + ${catStat.index}">
+                <div class="subcategory-menu-header" th:text="${entry.key.name}">Category Name</div>
+                <div class="subcategory-item" th:each="subCat, subStat : ${entry.value}">
+                    <div class="subcategory-link" th:data-cat-index="${catStat.index}" th:data-index="${subStat.index}" th:data-name="${subCat.name}" onclick="toggleSubCategory(this)">
+                        <span th:text="${subCat.name}">Phones</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    <div class="subsubcategory-menu" th:id="'subsubcategory-menu-' + ${catStat.index} + '-' + ${subStat.index}">
+                        <div class="subsubcategory-menu-header" th:text="${subCat.name}">SubCategory Name</div>
+                        <a th:each="subSubCat : ${subCat.subSubCategories}"
+                           th:href="@{/products(subSubCategoryId=${subSubCat.id})}"
+                           th:text="${subSubCat.name}" class="subsubcategory-link">Smartphones</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</aside>
+
+<!-- Products Section -->
+<main class="products-section">
+    <h2 class="section-title">Featured Products</h2>
+    <div class="products-grid">
+        <!-- Thymeleaf loop for products -->
+        <div class="product-card" th:each="product : ${products}">
+            <div class="product-image" th:onclick="'window.location.href=\'/product/' + ${product.id} + '\''">
+                <img th:src="${product.imageProducts != null && !product.imageProducts.isEmpty()} ? ${product.imageProducts[0].path} : '/images/placeholder.jpg'"
+                     th:alt="${product.name}">
+                <button class="wishlist-btn" th:data-id="${product.id}" onclick="event.stopPropagation(); toggleWishlist(this)">
+                    <i class="far fa-heart"></i>
+                </button>
+                <span class="old-price-badge" th:if="${product.oldPrice != null && product.oldPrice > product.price}">
+                        SALE
+                    </span>
+            </div>
+            <div class="product-info">
+                <h3 class="product-name" th:text="${product.name}">Product Name</h3>
+                <div class="product-rating">
+                    <div class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <span class="rating-value" th:text="${product.averageRating != null} ? ${#numbers.formatDecimal(product.averageRating, 1, 1)} : '0.0'">4.5</span>
+                </div>
+                <div class="product-price">
+                    <span class="current-price" th:text="'$' + ${#numbers.formatDecimal(product.price, 1, 2)}">$99.99</span>
+                    <span class="old-price" th:if="${product.oldPrice != null}" th:text="'$' + ${#numbers.formatDecimal(product.oldPrice, 1, 2)}">$129.99</span>
+                </div>
+                <button class="buy-btn" th:data-id="${product.id}" th:data-price="${product.price}" onclick="addToCart(this)">
+                    <i class="fas fa-shopping-cart"></i> Buy Now
+                </button>
+                <div class="quantity-controls hidden" th:data-id="${product.id}">
+                    <button class="qty-btn minus" onclick="decreaseQty(this)">−</button>
+                    <span class="qty-value">1</span>
+                    <button class="qty-btn plus" onclick="increaseQty(this)">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    const isLoggedIn = /*[[${#authorization.expression('isAuthenticated()')}]]*/ false;
+    let cartData = {};
+
+    // Initialize cart on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCart();
+    });
+
+    // Load cart from backend - cartId comes from cookie
+    function loadCart() {
+        fetch(`/api/cart`, { method: 'GET' })
+            .then(res => res.json())
+            .then(data => {
+                cartData = data || {};
+                updateCartUI();
+            })
+            .catch(err => {
+                console.error('Error loading cart:', err);
+                cartData = {};
+            });
+    }
+
+    function updateCartUI() {
+        updateCartBadge();
+
+        // Update product cards to show quantity controls if in cart
+        Object.keys(cartData).forEach(productId => {
+            const card = document.querySelector(`.buy-btn[data-id="${productId}"]`);
+            if (card) {
+                const qtyControls = card.closest('.product-info').querySelector('.quantity-controls');
+                const qtySpan = qtyControls.querySelector('.qty-value');
+                card.classList.add('hidden');
+                qtyControls.classList.remove('hidden');
+                qtySpan.textContent = cartData[productId];
+            }
+        });
+    }
+
+    function toggleCategory(el) {
+        document.querySelectorAll('.category-link').forEach(link => link.classList.remove('active'));
+        document.querySelectorAll('.subcategory-menu').forEach(menu => menu.classList.remove('active'));
+        document.querySelectorAll('.subsubcategory-menu').forEach(menu => menu.classList.remove('active'));
+        document.querySelectorAll('.subcategory-link').forEach(link => link.classList.remove('active'));
+
+        el.classList.add('active');
+        const index = el.dataset.index;
+        document.getElementById('subcategory-menu-' + index).classList.add('active');
+    }
+
+    function toggleSubCategory(el) {
+        document.querySelectorAll('.subcategory-link').forEach(link => link.classList.remove('active'));
+        document.querySelectorAll('.subsubcategory-menu').forEach(menu => menu.classList.remove('active'));
+
+        el.classList.add('active');
+        const catIndex = el.dataset.catIndex;
+        const index = el.dataset.index;
+        document.getElementById('subsubcategory-menu-' + catIndex + '-' + index).classList.add('active');
+    }
+
+    function toggleSidebar() {
+        document.querySelector('.sidebar').classList.toggle('active');
+        document.querySelector('.sidebar-overlay').classList.toggle('active');
+        if (!document.querySelector('.sidebar').classList.contains('active')) {
+            document.querySelectorAll('.category-link').forEach(link => link.classList.remove('active'));
+            document.querySelectorAll('.subcategory-menu').forEach(menu => menu.classList.remove('active'));
+            document.querySelectorAll('.subsubcategory-menu').forEach(menu => menu.classList.remove('active'));
+            document.querySelectorAll('.subcategory-link').forEach(link => link.classList.remove('active'));
+        }
+    }
+
+    function toggleWishlist(btn) {
+        btn.classList.toggle('active');
+        const icon = btn.querySelector('i');
+        const productId = btn.dataset.id;
+
+        if (btn.classList.contains('active')) {
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            // Add to wishlist
+            fetch(`/api/wishlist/add/${productId}`, { method: 'POST' })
+                .catch(err => console.error('Error adding to wishlist:', err));
+        } else {
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            // Remove from wishlist
+            fetch(`/api/wishlist/remove/${productId}`, { method: 'DELETE' })
+                .catch(err => console.error('Error removing from wishlist:', err));
+        }
+    }
+
+    function addToCart(btn) {
+        const productId = btn.dataset.id;
+
+        fetch(`/api/cart/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productId: productId,
+                quantity: 1
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                cartData[productId] = data.quantity || 1;
+                const qtyControls = btn.closest('.product-info').querySelector('.quantity-controls');
+                const qtySpan = qtyControls.querySelector('.qty-value');
+                btn.classList.add('hidden');
+                qtyControls.classList.remove('hidden');
+                qtySpan.textContent = cartData[productId];
+                updateCartBadge();
+            })
+            .catch(err => console.error('Error adding to cart:', err));
+    }
+
+    function increaseQty(btn) {
+        const controls = btn.closest('.quantity-controls');
+        const productId = controls.dataset.id;
+        const qtySpan = controls.querySelector('.qty-value');
+        let qty = parseInt(qtySpan.textContent) + 1;
+
+        fetch(`/api/cart/update/${productId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quantity: qty })
+        })
+            .then(res => res.json())
+            .then(data => {
+                cartData[productId] = qty;
+                qtySpan.textContent = qty;
+                updateCartBadge();
+            })
+            .catch(err => console.error('Error updating cart:', err));
+    }
+
+    function decreaseQty(btn) {
+        const controls = btn.closest('.quantity-controls');
+        const productId = controls.dataset.id;
+        const qtySpan = controls.querySelector('.qty-value');
+        let qty = parseInt(qtySpan.textContent) - 1;
+
+        if (qty <= 0) {
+            fetch(`/api/cart/remove/${productId}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    delete cartData[productId];
+                    const card = controls.closest('.product-card');
+                    const buyBtn = card.querySelector('.buy-btn');
+                    controls.classList.add('hidden');
+                    buyBtn.classList.remove('hidden');
+                    updateCartBadge();
+                })
+                .catch(err => console.error('Error removing from cart:', err));
+        } else {
+            fetch(`/api/cart/update/${productId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantity: qty })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    cartData[productId] = qty;
+                    qtySpan.textContent = qty;
+                    updateCartBadge();
+                })
+                .catch(err => console.error('Error updating cart:', err));
+        }
+    }
+
+    function updateCartBadge() {
+        const total = Object.values(cartData || {}).reduce((sum, qty) => sum + qty, 0);
+        document.getElementById('cartBadge').dataset.count = total;
+    }
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            window.location.href = '/dashboard?name=' + encodeURIComponent(this.value);
+        }
+    });
+
+    // Sync guest cart when user logs in
+    function syncGuestCartToServer() {
+        if (isLoggedIn) {
+            fetch(`/api/cart/merge`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    console.log('Cart synced successfully');
+                    loadCart();
+                })
+                .catch(err => console.error('Error syncing cart:', err));
+        }
+    }
+
+    // Call sync on page load if user just logged in
+    window.addEventListener('load', function() {
+        if (isLoggedIn) {
+            syncGuestCartToServer();
+        }
+    });
+</script>
+
+</body>
+</html>

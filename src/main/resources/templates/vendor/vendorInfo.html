@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Vendor Details - Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:'Inter',sans-serif; background:#f9f9fb; color:#222; min-height:100vh; display:flex; flex-direction:column; }
+        header { background:#fff; padding:16px 48px; box-shadow:0 1px 3px rgba(0,0,0,.05); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+        .logo { font-weight:700; font-size:20px; color:#222; text-decoration:none; }
+        .nav-links { display:flex; gap:24px; align-items:center; }
+        .nav-links a { text-decoration:none; color:#555; font-weight:500; font-size:14px; transition:color .2s; }
+        .nav-links a:hover { color:#6c3ef0; }
+        header { background:#fff; padding:16px 48px; box-shadow:0 1px 3px rgba(0,0,0,.05); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+        .logo { font-weight:700; font-size:20px; color:#222; text-decoration:none; }
+        .nav-links { display:flex; gap:24px; align-items:center; }
+        .nav-links a { text-decoration:none; color:#555; font-weight:500; font-size:14px; transition:color .2s; }
+        .nav-links a:hover { color:#6c3ef0; }
+        .nav-links a.active { color:#6c3ef0; font-weight:600; position:relative; }
+        .nav-links a.active::after { content:''; position:absolute; bottom:-8px; left:0; width:100%; height:2px; background:#6c3ef0; border-radius:1px; }
+        .admin-badge { background:#6c3ef0; color:#fff; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; }
+        main { flex-grow:1; padding:32px 48px; }
+        .page-title { font-size:24px; font-weight:700; margin-bottom:24px; color:#222; display:flex; justify-content:space-between; align-items:center; }
+        .btn { padding:8px 16px; border:none; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; transition:all .2s; }
+        .btn-back { background:#f1f5f9; color:#475569; }
+        .btn-back:hover { background:#e2e8f0; }
+        .vendor-card { background:#fff; border-radius:12px; padding:24px; box-shadow:0 1px 6px rgba(0,0,0,.05); margin-bottom:32px; }
+        .vendor-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; }
+        .vendor-info h2 { margin:0 0 8px; font-size:22px; font-weight:700; color:#222; }
+        .vendor-info .shop-name { font-size:18px; color:#6c3ef0; font-weight:600; }
+        .vendor-info .status { padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; }
+        .status.approved { background:#dcfce7; color:#166534; }
+        .status.pending { background:#fef3c7; color:#92400e; }
+        .info-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-top:16px; }
+        .info-item { font-size:14px; }
+        .info-item strong { color:#444; }
+        .info-item span { color:#666; }
+        .products-section { margin-top:32px; }
+        .section-title { font-size:18px; font-weight:600; margin-bottom:16px; color:#222; }
+        .table-container { background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,.05); }
+        table { width:100%; border-collapse:collapse; }
+        th { background:#f8f9ff; padding:16px; text-align:left; font-weight:600; font-size:14px; color:#444; border-bottom:1px solid #eee; }
+        td { padding:16px; font-size:14px; color:#333; border-bottom:1px solid #eee; }
+        tr:hover { background-color:#f8f9ff; }
+        .product-name { font-weight:600; color:#222; }
+        .sold-badge { background:#dcfce7; color:#166534; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:600; }
+        .stock-low { color:#ef4444; font-weight:600; }
+        .empty-state { text-align:center; padding:48px 20px; color:#666; }
+        .empty-state img { width:80px; opacity:.3; margin-bottom:16px; }
+        .lang-toggle { background:none; border:none; cursor:pointer; font-size:14px; color:#6c3ef0; }
+        @media (max-width:768px) {
+            header { padding:16px; flex-direction:column; gap:12px; }
+            main { padding:20px; }
+            .vendor-header { flex-direction:column; gap:16px; }
+            .info-grid { grid-template-columns: 1fr; }
+            .table-container { overflow-x:auto; }
+            table { min-width:800px; }
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/headerVendor :: VendorHeader(${currentWebPage})"></div>
+
+
+<main>
+    <div class="page-title">
+        <div>Vendor Details</div>
+        <a th:href="@{/admin/vendors}" class="btn btn-back">Back to Vendors</a>
+    </div>
+
+    <!-- Vendor Card -->
+    <div class="vendor-card">
+        <div class="vendor-header">
+            <div class="vendor-info">
+                <h2 th:text="${userDto.username}">John Doe</h2>
+                <div class="shop-name" th:text="${userDto.vendorDto.shopName}">TechStore</div>
+                <span class="status"
+                      th:classappend="${userDto.vendorDto.approved} ? 'approved' : 'pending'"
+                      th:text="${userDto.vendorDto.approved} ? 'Approved' : 'Pending Approval'">
+                    Approved
+                </span>
+            </div>
+            <div th:if="${userDto.createdAt}" style="color:#888; font-size:14px;">
+                Joined <span th:text="${#temporals.format(userDto.createdAt, 'dd MMM yyyy')}">15 Nov 2025</span>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Email:</strong> <span th:text="${userDto.email}">john@example.com</span>
+            </div>
+            <div class="info-item">
+                <strong>Phone:</strong> <span th:text="${userDto.phone}">+998 99 123 4567</span>
+            </div>
+            <div class="info-item">
+                <strong>Total Products:</strong> <span th:text="${#lists.size(userDto.vendorDto.products)}">24</span>
+            </div>
+            <div class="info-item">
+                <strong>Total Sold:</strong>
+                <span th:text="${totalSold}">1,842</span>
+            </div>
+        </div>
+
+        <div th:if="${userDto.vendorDto.description}" style="margin-top:20px; color:#555; font-size:14px; line-height:1.5;">
+            <strong>Description:</strong><br>
+            <span th:text="${userDto.vendorDto.description}">We sell high-quality electronics...</span>
+        </div>
+    </div>
+
+    <!-- Products Section -->
+    <div class="products-section">
+        <div class="section-title">Products (<span th:text="${#lists.size(userDto.vendorDto.products)}">24</span>)</div>
+
+        <div class="table-container" th:if="${userDto.vendorDto.products != null and !userDto.vendorDto.products.isEmpty()}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Sold</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="product : ${userDto.vendorDto.products}">
+                    <td>
+                        <div class="product-name" th:text="${product.name}">iPhone 15 Pro</div>
+                    </td>
+                    <td th:text="${product.subSubCategoryDto?.name}">Smartphones</td>
+                    <td th:text="'$' + ${product.price}">999.00</td>
+                    <td>
+                        <span th:text="${product.stockQuantity}"
+                              th:classappend="${product.stockQuantity <= 10} ? 'stock-low'"></span>
+                    </td>
+                    <td>
+                        <span class="sold-badge" th:text="${product.soldQuantity}">124</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" th:if="${userDto.vendorDto.products == null or userDto.vendorDto.products.isEmpty()}">
+            <img src="https://cdn-icons-png.flaticon.com/512/7486/7486760.png" alt="No products">
+            <p>No products added yet.</p>
+        </div>
+    </div>
+</main>
+
+
+
+
+</body>
+</html>

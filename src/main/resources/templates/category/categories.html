@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Categories - ShopFlow Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+
+        .nav-links a.active {
+            color: #6c3ef0;
+            font-weight: 600;
+            position: relative;
+        }
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #6c3ef0;
+            border-radius: 1px;
+        }
+
+        body { margin:0; font-family:'Inter',sans-serif; background:#f9f9fb; color:#222; min-height:100vh; display:flex; flex-direction:column; }
+        header { background:#fff; padding:16px 48px; box-shadow:0 1px 3px rgba(0,0,0,.05); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+        .logo { font-weight:700; font-size:20px; color:#222; text-decoration:none; }
+        .nav-links { display:flex; gap:24px; align-items:center; }
+        .nav-links a { text-decoration:none; color:#555; font-weight:500; font-size:14px; transition:color .2s; }
+        .nav-links a:hover { color:#6c3ef0; }
+        .page-title { font-size:24px; font-weight:700; margin-bottom:24px; }
+        .add-root { display:flex; gap:12px; margin-bottom:32px; }
+        .input { flex:1; padding:10px 16px; border:1px solid #ddd; border-radius:8px; }
+        .btn { padding:10px 20px; background:#6c3ef0; color:#fff; border:none; border-radius:8px; cursor:pointer; }
+
+        .category-item { margin-bottom:16px; padding:16px; background:#fff; border-radius:12px; box-shadow:0 1px 6px rgba(0,0,0,.05); }
+        .category-header { display:flex; justify-content:space-between; align-items:center; font-size:18px; font-weight:600; }
+
+        .sub-list { margin-left:24px; margin-top:12px; }
+        .sub-item { padding:8px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; }
+
+        .subsub-list { margin-left:32px; margin-top:8px; }
+        .subsub-item { padding:6px 0; font-size:14px; color:#555; }
+
+        .add-sub, .add-subsub { background:#e0e7ff; color:#6c3ef0; border:none; padding:4px 10px; border-radius:6px; cursor:pointer; }
+    </style>
+</head>
+<body>
+
+
+<div th:replace="fragments/header :: adminHeader(${currentWebPage})"></div>
+
+<h1 class="page-title">Category Management</h1>
+
+<div class="add-root">
+    <input type="text" id="newCategory" class="input" placeholder="New category name...">
+    <button class="btn" onclick="addCategory()">Add Category</button>
+</div>
+
+<!-- CATEGORY TREE -->
+<div id="categoryTree">
+
+    <div th:each="entry : ${categoryMap}" class="category-item">
+
+        <!-- CATEGORY -->
+        <div class="category-header">
+            <span th:text="${entry.key.name}">Category Name</span>
+            <button class="add-sub"
+                    th:onclick="|showSubForm(${entry.key.id})|">+ Sub</button>
+        </div>
+
+        <!-- SUBCATEGORIES -->
+        <div class="sub-list" th:if="${entry.value != null}">
+            <div th:each="sub : ${entry.value}" class="sub-item">
+
+                <span th:text="${sub.name}">SubCategory</span>
+
+                <button class="add-subsub"
+                        th:onclick="|showSubSubForm(${entry.key.id}, ${sub.id})|">+ SubSub</button>
+
+            </div>
+
+            <!-- SUBSUBCATEGORIES -->
+            <div class="subsub-list" th:each="sub : ${entry.value}">
+                <div th:each="ss : ${sub.subSubCategories}"
+                     class="subsub-item"
+                     th:text="${ss.name}">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function addCategory() {
+        const name = document.getElementById('newCategory').value.trim();
+        if (!name) return alert('Enter category name');
+
+        fetch('/admin/category', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        }).then(() => location.reload());
+    }
+
+    function showSubForm(catId) {
+        const name = prompt("Subcategory name:");
+        if (!name) return;
+
+        fetch(`/admin/category/${catId}/sub`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ name })
+        }).then(() => location.reload());
+    }
+
+    function showSubSubForm(catId, subId) {
+        const name = prompt("Sub-Subcategory name:");
+        if (!name) return;
+
+        fetch(`/admin/sub/${subId}/subsub`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ name })
+        }).then(() => location.reload());
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Header -->
+<header th:fragment="productHeader(currentPage)">
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="city-select">
+                <span>Toshkent</span>
+                <span>▼</span>
+            </div>
+            <div>
+                <a href="#" style="color:var(--gray);">Savol-javob</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-inner">
+        <a href="/" class="logo">uzum market</a>
+
+        <div class="search-bar">
+            <form th:action="@{/}" method="get">
+                <input type="text" name="name" placeholder="Mahsulotlar va turkumlar izlash" th:value="${param.name}">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
+        <div class="user-actions">
+            <a href="/login">Kirish</a>
+            <a href="/wishlist">Saralangan</a>
+            <a href="/cart">Savat</a>
+        </div>
+    </div>
+</header>
+</body>
+</html>

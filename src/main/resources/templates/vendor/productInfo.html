@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${product.name + ' - My Product'}">iPhone 15 Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * { box-sizing: border-box; margin:0; padding:0; }
+        body { font-family:'Inter',sans-serif; background:#f9f9fb; color:#222; min-height:100vh; display:flex; flex-direction:column; }
+        header { background:#fff; padding:16px 48px; box-shadow:0 1px 3px rgba(0,0,0,.05); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+        .logo { font-weight:700; font-size:20px; color:#222; text-decoration:none; }
+        .nav-links { display:flex; gap:24px; align-items:center; }
+        .nav-links a { text-decoration:none; color:#555; font-weight:500; font-size:14px; transition:color .2s; }
+        .nav-links a:hover { color:#6c3ef0; }
+        .nav-links a.active { color:#6c3ef0; font-weight:600; position:relative; }
+        .nav-links a.active::after { content:''; position:absolute; bottom:-8px; left:0; width:100%; height:2px; background:#6c3ef0; border-radius:1px; }
+        .badge { background:#6c3ef0; color:#fff; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; }
+        main { flex-grow:1; padding:32px 48px; }
+        .page-title { font-size:24px; font-weight:700; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; }
+        .btn { padding:10px 20px; border:none; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; transition:all .2s; }
+        .btn-back { background:#f1f5f9; color:#475569; }
+        .btn-back:hover { background:#e2e8f0; }
+        .btn-edit { background:#6c3ef0; color:#fff; }
+        .btn-edit:hover { background:#5833c9; }
+
+        .product-container { display:grid; grid-template-columns: 1fr 1fr; gap:40px; margin-bottom:40px; }
+        .gallery { display:flex; flex-direction:column; gap:12px; }
+        .main-image { width:100%; height:500px; object-fit:cover; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.1); }
+        .thumbnails { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+        .thumb { width:100%; height:80px; object-fit:cover; border-radius:8px; cursor:pointer; opacity:0.7; transition:all .2s; border:2px solid transparent; }
+        .thumb.active, .thumb:hover { opacity:1; border-color:#6c3ef0; }
+
+        .product-info h1 { font-size:32px; font-weight:700; margin-bottom:12px; }
+        .price { font-size:36px; font-weight:700; color:#6c3ef0; margin:12px 0; }
+        .stats { display:flex; gap:20px; margin:20px 0; }
+        .stat { background:#f8f9ff; padding:16px; border-radius:12px; text-align:center; min-width:100px; }
+        .stat strong { display:block; font-size:24px; color:#6c3ef0; }
+        .description { background:#f8f9ff; padding:20px; border-radius:12px; line-height:1.7; color:#444; margin:24px 0; }
+        .category-path { color:#6c3ef0; font-weight:500; font-size:15px; }
+
+        .reviews-section { margin-top:48px; }
+        .section-title { font-size:22px; font-weight:600; margin-bottom:20px; }
+        .review-card { background:#fff; padding:20px; border-radius:12px; box-shadow:0 1px 6px rgba(0,0,0,.05); margin-bottom:16px; }
+        .review-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+        .reviewer { font-weight:600; color:#222; }
+        .rating { color:#f59e0b; font-size:20px; }
+        .review-comment { color:#444; line-height:1.6; }
+
+        .empty-state { text-align:center; padding:60px 20px; color:#888; }
+        .empty-state img { width:90px; opacity:.3; margin-bottom:20px; }
+
+        .lang-toggle { background:none; border:none; cursor:pointer; font-size:14px; color:#6c3ef0; }
+
+        @media (max-width:992px) {
+            .product-container { grid-template-columns:1fr; }
+            .main-image { height:400px; }
+        }
+        @media (max-width:768px) {
+            header { padding:16px; flex-direction:column; gap:12px; }
+            main { padding:20px; }
+            .stats { flex-wrap:wrap; }
+            .thumbnails { grid-template-columns:repeat(4,1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/headerVendor :: VendorHeader(${currentWebPage})"></div>
+
+
+<main>
+    <div class="page-title">
+        <div>Product Details</div>
+        <div>
+            <a th:href="@{/vendor/products}" class="btn btn-back">Back</a>
+            <a th:href="@{/vendor/product/edit/{id}(id=${product.id})}" class="btn btn-edit">Edit Product</a>
+        </div>
+    </div>
+
+    <div class="product-container">
+        <!-- Image Gallery -->
+        <div class="gallery">
+            <img id="mainImage"
+                 th:src="${(product.imageProducts != null and !product.imageProducts.isEmpty())
+              ? product.imageProducts[0].path
+              : '/images/no-image.jpg'}"
+                 alt="Main product image"
+                 class="main-image">
+
+            <div class="thumbnails" th:if="${product.imageProducts != null && !product.imageProducts.isEmpty()}">
+                <img th:each="img, iter : ${product.imageProducts}"
+                     th:src="${img.path}"
+                     th:alt="${img.originalName}"
+                     th:classappend="${iter.index == 0} ? 'thumb active' : 'thumb'"
+                     onclick="changeMainImage(this)"
+                     class="thumb">
+            </div>
+
+            <div th:if="${product.imageProducts == null or product.imageProducts.isEmpty()}" class="empty-state">
+                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486760.png" alt="No image">
+                <p>No images uploaded</p>
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="product-info">
+            <h1 th:text="${product.name}">iPhone 15 Pro Max</h1>
+            <div class="price" th:text="'$' + ${#numbers.formatDecimal(product.price, 0, 2)}">$1,299.00</div>
+
+            <div class="stats">
+                <div class="stat">
+                    <strong th:text="${product.soldQuantity}">248</strong>
+                    Sold
+                </div>
+                <div class="stat">
+                    <strong th:text="${product.stockQuantity}">12</strong>
+                    In Stock
+                </div>
+                <div class="stat">
+                    <strong th:text="${#lists.size(product.reviews)}">42</strong>
+                    Reviews
+                </div>
+            </div>
+
+            <div class="description" th:text="${product.description}">
+                The ultimate iPhone with titanium design, A17 Pro chip, and revolutionary camera system...
+            </div>
+
+            <div class="category-path" th:if="${product.subSubCategoryDto != null}">
+                Category:
+                <span th:text="${product.subSubCategoryDto.subCategoryDto?.categoryDto?.name}">Electronics</span> →
+                <span th:text="${product.subSubCategoryDto.subCategoryDto?.name}">Smartphones</span> →
+                <span th:text="${product.subSubCategoryDto.name}">iPhone</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="reviews-section">
+        <div class="section-title">
+            Customer Reviews (<span th:text="${#lists.size(product.reviews)}">42</span>)
+        </div>
+
+        <div th:each="review : ${product.reviews}" class="review-card">
+            <div class="review-header">
+                <div class="reviewer" th:text="${review.sender?.username}">Azizbek</div>
+                <div class="rating"
+                     th:text="'★★★★★'.substring(0, ${review.rating}) + '☆☆☆☆☆'.substring(${review.rating})">
+                    ★★★★★
+                </div>
+            </div>
+            <div class="review-comment" th:text="${review.comment}">
+                Excellent product! Fast delivery and original packaging.
+            </div>
+        </div>
+
+        <div class="empty-state" th:if="${product.reviews == null or product.reviews.isEmpty()}">
+            <img src="https://cdn-icons-png.flaticon.com/512/7486/7486760.png" alt="No reviews">
+            <p>No customer reviews yet.</p>
+        </div>
+    </div>
+</main>
+
+<script>
+    function changeMainImage(thumb) {
+        const main = document.getElementById('mainImage');
+        main.src = thumb.src;
+        document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+    }
+
+
+</script>
+
+
+
+</body>
+</html>

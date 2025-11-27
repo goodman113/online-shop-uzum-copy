@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Vendor Approval</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+
+        /* ---- SAME STYLE AS BEFORE (kept for consistency) ---- */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:'Inter',sans-serif; background:#f9f9fb; color:#222; min-height:100vh; display:flex; flex-direction:column; }
+        header { background:#fff; padding:16px 48px; box-shadow:0 1px 3px rgba(0,0,0,.05); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+        .logo { font-weight:700; font-size:20px; color:#222; text-decoration:none; }
+        .nav-links { display:flex; gap:24px; align-items:center; }
+        .nav-links a { text-decoration:none; color:#555; font-weight:500; font-size:14px; transition:color .2s; }
+        .nav-links a:hover { color:#6c3ef0; }
+        .admin-badge { background:#6c3ef0; color:#fff; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; }
+        main { flex-grow:1; padding:32px 48px; }
+        .page-title { font-size:24px; font-weight:700; margin-bottom:24px; color:#222; }
+        .stats-card { background:#fff; padding:16px 20px; border-radius:12px; box-shadow:0 1px 6px rgba(0,0,0,.05); display:inline-block; margin-bottom:24px; font-size:14px; }
+        .stats-card strong { color:#6c3ef0; }
+        .table-container { background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.05); }
+        table { width:100%; border-collapse:collapse; }
+        th { background:#f8f9ff; padding:16px; text-align:left; font-weight:600; font-size:14px; color:#444; border-bottom:1px solid #eee; }
+        td { padding:16px; font-size:14px; color:#333; border-bottom:1px solid #eee; }
+        tr:hover { background-color:#f8f9ff; }
+        .vendor-name { font-weight:600; color:#222; }
+        .email { color:#6c3ef0; font-weight:500; }
+        .phone { color:#555; font-size:13px; }
+        .description { max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#555; font-size:13px; }
+        .actions { display:flex; gap:8px; }
+        .btn { padding:6px 12px; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
+        .btn-approve { background:#22c55e; color:#fff; }
+        .btn-approve:hover { background:#16a34a; }
+        .btn-reject { background:#ef4444; color:#fff; }
+        .btn-reject:hover { background:#dc2626; }
+        .btn:disabled { opacity:.6; cursor:not-allowed; }
+        .message { padding:12px 16px; border-radius:8px; margin-bottom:20px; font-size:14px; font-weight:500; }
+        .success-message { background:#dcfce7; color:#166534; border:1px solid #22c55e; }
+        .error-message { background:#fee2e2; color:#991b1b; border:1px solid #ef4444; }
+        .empty-state { text-align:center; padding:48px 20px; color:#666; font-size:16px; }
+        .empty-state img { width:80px; opacity:.3; margin-bottom:16px; }
+        @media (max-width:768px) {
+            header { padding:16px; flex-direction:column; gap:12px; }
+            main { padding:20px; }
+            .table-container { overflow-x:auto; }
+            table { min-width:800px; }
+        }
+    </style>
+
+    <script>
+        const socket = new WebSocket('ws://' + location.host + '/ws/vendor-updates');
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            const action = data.action;
+            const shopName = data.shopName;
+
+            // Show toast
+            showToast(`${action}: "${shopName}"`, action === 'APPROVED' ? 'success' : 'error');
+
+            // If on vendor_accept page → remove row
+            if (window.location.pathname.includes('vendor_accept')) {
+                const row = document.querySelector(`tr[data-vendor-id="${data.vendorId}"]`);
+                if (row) row.remove();
+                updatePendingCount();
+            }
+
+            // If on dashboard → add to recent activity
+            if (window.location.pathname.includes('dashboard')) {
+                addActivityLog(data);
+            }
+        };
+
+        function showToast(msg, type) {
+            const toast = document.createElement('div');
+            toast.textContent = msg;
+            toast.style.position = 'fixed';
+            toast.style.bottom = '20px';
+            toast.style.right = '20px';
+            toast.style.padding = '12px 20px';
+            toast.style.borderRadius = '8px';
+            toast.style.color = '#fff';
+            toast.style.fontWeight = '600';
+            toast.style.zIndex = '1000';
+            toast.style.background = type === 'success' ? '#22c55e' : '#ef4444';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function updatePendingCount() {
+            const countEl = document.querySelector('.stats-card span');
+            if (countEl) {
+                let count = parseInt(countEl.textContent) || 0;
+                if (count > 0) countEl.textContent = count - 1;
+            }
+        }
+
+        function addActivityLog(data) {
+            const list = document.querySelector('.activity');
+            if (!list) return;
+
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.innerHTML = `
+            <div>
+                <span class="action">${data.action}</span>
+                <span>${data.shopName}</span>
+            </div>
+            <div class="time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+        `;
+            list.insertBefore(item, list.firstChild);
+        }
+    </script>
+</head>
+<body>
+
+
+<div th:replace="fragments/header :: adminHeader(${currentPage})"></div>
+
+<main>
+    <div class="page-title">Vendor Approval Requests</div>
+
+    <!-- Flash Messages -->
+    <div th:if="${successMessage}" class="message success-message" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="message error-message" th:text="${errorMessage}"></div>
+
+    <!-- Stats -->
+    <div class="stats-card">
+        <span th:text="${#lists.size(userDtos)}"></span> <strong>Pending Approval</strong>
+    </div>
+
+    <!-- Vendors Table -->
+    <div class="table-container" th:if="${userDtos != null and !userDtos.isEmpty()}">
+        <table>
+            <thead>
+            <tr>
+                <th>Vendor</th>
+                <th>Contact</th>
+                <th>Shop Name</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="userDto : ${userDtos}" th:data-vendor-id="${userDto.vendorDto.id}">
+                <td>
+                    <div class="vendor-name" th:text="${userDto.username}">John Doe</div>
+                </td>
+                <td>
+                    <div class="email" th:text="${userDto.email}">john@example.com</div>
+                    <div class="phone" th:text="${userDto.phone}">+998 99 123 4567</div>
+                </td>
+                <td>
+                    <strong th:text="${userDto.vendorDto?.shopName}">TechStore</strong>
+                </td>
+                <td>
+                    <div class="description" th:text="${userDto.vendorDto?.description} ?: 'No description'">
+                        Electronics and gadgets...
+                    </div>
+                </td>
+                <td class="actions">
+                    <!-- APPROVE -->
+                    <form th:action="@{/admin/vendor/approve/{id}(id=${userDto.vendorDto.id})}"
+                          method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-approve"
+                                th:data-shop-name="${userDto.vendorDto?.shopName ?: 'this vendor'}"
+                                onclick="return handleConfirm(this, 'Approve')">
+                            Approve
+                        </button>
+                    </form>
+
+                    <!-- REJECT -->
+                    <form th:action="@{/admin/vendor/reject/{id}(id=${userDto.vendorDto.id})}"
+                          method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-reject"
+                                th:data-shop-name="${userDto.vendorDto?.shopName ?: 'this vendor'}"
+                                onclick="return handleConfirm(this, 'Reject')">
+                            Reject
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" th:if="${userDtos == null or userDtos.isEmpty()}">
+        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486760.png" alt="No vendors">
+        <p>No pending vendor approvals.</p>
+        <p>All registered vendors have been reviewed.</p>
+    </div>
+</main>
+
+<script>
+    function handleConfirm(button, action) {
+        const shopName = button.getAttribute('data-shop-name') || 'this vendor';
+        const message = `${action} "${shopName}"?`;
+        return confirm(message);
+    }
+
+    // Auto-hide flash messages
+    setTimeout(() => {
+        const msg = document.querySelector('.message');
+        if (msg) {
+            msg.style.transition = 'opacity 0.5s';
+            msg.style.opacity = '0';
+            setTimeout(() => msg.remove(), 500);
+        }
+    }, 5000);
+</script>
+<script>
+    // Auto-hide flash messages
+    setTimeout(() => {
+        const msg = document.querySelector('.message');
+        if (msg) {
+            msg.style.transition = 'opacity 0.5s';
+            msg.style.opacity = '0';
+            setTimeout(() => msg.remove(), 500);
+        }
+    }, 5000);
+</script>
+
+</body>
+</html>

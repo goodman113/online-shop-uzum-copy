@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Vendors - ShopFlow Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        /* Active Nav */
+        .nav-links a.active {
+            color: #6c3ef0;
+            font-weight: 600;
+            position: relative;
+        }
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #6c3ef0;
+            border-radius: 1px;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:'Inter',sans-serif; background:#f9f9fb; color:#222; min-height:100vh; display:flex; flex-direction:column; }
+        header { background:#fff; padding:16px 48px; box-shadow:0 1px 3px rgba(0,0,0,.05); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+        .logo { font-weight:700; font-size:20px; color:#222; text-decoration:none; }
+        .nav-links { display:flex; gap:24px; align-items:center; }
+        .nav-links a { text-decoration:none; color:#555; font-weight:500; font-size:14px; transition:color .2s; }
+        .nav-links a:hover { color:#6c3ef0; }
+        .admin-badge { background:#6c3ef0; color:#fff; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; }
+        main { flex-grow:1; padding:32px 48px; }
+        .page-title { font-size:24px; font-weight:700; margin-bottom:24px; color:#222; display:flex; justify-content:space-between; align-items:center; }
+        .search-bar { display:flex; gap:12px; margin-bottom:24px; }
+        .search-input { flex:1; padding:10px 16px; border:1px solid #ddd; border-radius:8px; font-size:14px; }
+        .search-btn { padding:10px 20px; background:#6c3ef0; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer; }
+        .search-btn:hover { background:#5833c9; }
+        .filters { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+        .filter-btn { padding:6px 12px; background:#f1f5f9; color:#475569; border-radius:6px; font-size:13px; cursor:pointer; }
+        .filter-btn.active { background:#6c3ef0; color:#fff; }
+        .table-container { background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.05); }
+        table { width:100%; border-collapse:collapse; }
+        th { background:#f8f9ff; padding:16px; text-align:left; font-weight:600; font-size:14px; color:#444; border-bottom:1px solid #eee; }
+        td { padding:16px; font-size:14px; color:#333; border-bottom:1px solid #eee; }
+        tr:hover { background-color:#f8f9ff; }
+        .vendor-name { font-weight:600; color:#222; }
+        .status { padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; }
+        .status.approved { background:#dcfce7; color:#166534; }
+        .actions { display:flex; gap:8px; }
+        .btn { padding:6px 12px; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; }
+        .btn-view { background:#e0e7ff; color:#6c3ef0; }
+        .btn-view:hover { background:#c7d2fe; }
+        .pagination { display:flex; justify-content:center; gap:8px; margin-top:24px; }
+        .page-btn { padding:8px 12px; background:#f1f5f9; color:#475569; border-radius:6px; font-size:14px; cursor:pointer; }
+        .page-btn.active { background:#6c3ef0; color:#fff; }
+        .page-btn:disabled { opacity:0.5; cursor:not-allowed; }
+        .lang-toggle { background:none; border:none; cursor:pointer; font-size:14px; color:#6c3ef0; }
+        @media (max-width:768px) {
+            header { padding:16px; flex-direction:column; gap:12px; }
+            main { padding:20px; }
+            .search-bar { flex-direction:column; }
+            .table-container { overflow-x:auto; }
+            table { min-width:800px; }
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/header :: adminHeader(${currentWebPage})"></div>
+
+<main>
+    <div class="page-title">
+        <div>Vendors</div>
+        <div>
+            <span th:text="${#lists.size(users)}">124</span> <strong>Approved Vendors</strong>
+        </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="search-bar">
+        <input type="text" class="search-input" placeholder="Search by shop name, email, or phone..." id="searchInput">
+        <button class="search-btn" onclick="filterVendors()">Search</button>
+    </div>
+    <div class="filters">
+        <button class="filter-btn active" onclick="filterStatus('all')">All</button>
+        <button class="filter-btn" onclick="filterStatus('approved')">Approved</button>
+    </div>
+
+    <!-- Vendors Table -->
+    <div class="table-container" th:if="${users != null and !users.isEmpty()}">
+        <table>
+            <thead>
+            <tr>
+                <th>Vendor</th>
+                <th>Contact</th>
+                <th>Shop Name</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="vendor : ${users}" th:data-vendor-id="${vendor.id}">
+                <td>
+                    <div class="vendor-name" th:text="${vendor.username}">John Doe</div>
+                </td>
+                <td>
+                    <div th:text="${vendor.email}">john@example.com</div>
+                    <div th:text="${vendor.phone}">+998 99 123 4567</div>
+                </td>
+                <td>
+                    <strong th:text="${vendor.vendorDto.shopName}">TechStore</strong>
+                </td>
+                <td>
+                    <span class="status approved" th:text="${vendor.vendorDto.approved} ? 'Approved' : 'Pending'">Approved</span>
+                </td>
+                <td th:text="${#temporals.format(vendor.createdAt, 'dd MMM yyyy')}">15 Nov 2025</td>
+                <td class="actions">
+                    <button class="btn btn-view" th:onclick="|location.href='@{/admin/vendor/{id}(id=${vendor.id})}'|">
+                        View
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" th:if="${users == null or users.isEmpty()}" style="text-align:center; padding:48px 20px; color:#666;">
+        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486760.png" alt="No vendors" style="width:80px; opacity:.3; margin-bottom:16px;">
+        <p>No vendors found.</p>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" th:if="${totalPages > 1}">
+        <button class="page-btn" th:disabled="${currentPage == 0}" th:onclick="|location.href='@{/admin/vendors(page=${currentPage - 1})}'|">Previous</button>
+        <button class="page-btn" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${i == currentPage} ? 'active'"
+                th:onclick="|location.href='@{/admin/vendors(page=${i})}'|"
+                th:text="${i + 1}">1</button>
+        <button class="page-btn" th:disabled="${currentPage == totalPages - 1}" th:onclick="|location.href='@{/admin/vendors(page=${currentPage + 1})}'|">Next</button>
+    </div>
+</main>
+
+<script>
+    // Search & Filter
+    function filterVendors() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+
+    function filterStatus(status) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const isApproved = row.querySelector('.status').textContent === 'Approved';
+            row.style.display = (status === 'all') || (status === 'approved' && isApproved) ? '' : 'none';
+        });
+    }
+
+
+    // WebSocket (optional: show toast if vendor is updated)
+    const socket = new WebSocket('ws://' + location.host + '/ws/vendor-updates');
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        showToast(`${data.action}: "${data.shopName}"`, data.action === 'APPROVED' ? 'success' : 'error');
+    };
+
+    function showToast(msg, type) {
+        const toast = document.createElement('div');
+        toast.textContent = msg;
+        toast.style.position = 'fixed';
+        toast.style.bottom = '20px';
+        toast.style.right = '20px';
+        toast.style.padding = '12px 20px';
+        toast.style.borderRadius = '8px';
+        toast.style.color = '#fff';
+        toast.style.fontWeight = '600';
+        toast.style.zIndex = '1000';
+        toast.style.background = type === 'success' ? '#22c55e' : '#ef4444';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+</script>
+
+
+</body>
+</html>

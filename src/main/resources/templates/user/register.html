@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f9;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 48px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: #222;
+            font-size: 18px;
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .lang-select {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .register-btn {
+            background: #6c3ef0;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .register-btn:hover {
+            background: #5833c9;
+        }
+
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            width: 380px;
+            text-align: center;
+        }
+
+        .container h2 {
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #222;
+        }
+
+        .input-field {
+            width: 100%;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .input-field input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-field input:focus {
+            border-color: #6c3ef0;
+            box-shadow: 0 0 0 2px rgba(108, 62, 240, 0.15);
+        }
+
+        .btn {
+            background: #6c3ef0;
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover:not([disabled]) {
+            background: #5833c9;
+        }
+
+        .btn[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .link {
+            margin-top: 16px;
+            display: block;
+            color: #6c3ef0;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .profile-pic-wrapper {
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .profile-pic {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ddd;
+            margin-bottom: 8px;
+        }
+
+        .upload-label {
+            display: inline-block;
+            cursor: pointer;
+            color: #6c3ef0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .upload-label:hover {
+            text-decoration: underline;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .error {
+            color: red;
+            font-size: 13px;
+            margin-top: -8px;
+            margin-bottom: 8px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <span>Ali Market</span>
+    </div>
+
+    <div class="top-right">
+
+        <form th:action="${currentPath}" method="get">
+            <label>
+                <select name="lang" class="lang-select" onchange="this.form.submit()">
+                    <option value="en" th:selected="${#locale.language == 'en'}">EN</option>
+                    <option value="ru" th:selected="${#locale.language == 'ru'}">RU</option>
+                    <option value="uz" th:selected="${#locale.language == 'uz'}">UZ</option>
+                </select>
+            </label>
+        </form>
+
+        <a th:href="@{/login}">
+            <button class="register-btn" type="button" th:text="#{login}"></button>
+        </a>
+    </div>
+</header>
+
+<main>
+    <div class="container">
+        <h2 th:text="#{register}"></h2>
+
+        <form id="registerForm" th:action="@{/register}" th:object="${user}" method="post" enctype="multipart/form-data" novalidate>
+
+            <!-- USERNAME -->
+            <div class="input-field">
+                <label>
+                    <input type="text" th:field="*{username}" th:placeholder="#{username}" required>
+                </label>
+            </div>
+
+            <!-- PHONE (matches DTO: phone) -->
+            <div class="input-field">
+                <label>
+                    <input type="text" th:field="*{phone}" th:placeholder="#{phone.number}" required>
+                </label>
+            </div>
+
+            <!-- EMAIL -->
+            <div class="input-field">
+                <label>
+                    <input type="email" th:field="*{email}" th:placeholder="#{email}" required>
+                </label>
+            </div>
+
+            <!-- PASSWORD -->
+            <div class="input-field">
+                <label>
+                    <input type="password" th:field="*{password}" th:placeholder="#{password}" required>
+                </label>
+            </div>
+
+            <!-- CONFIRM PASSWORD (only if exists in DTO) -->
+            <div class="input-field">
+                <label>
+                    <input type="password" th:field="*{confirmPassword}" th:placeholder="#{confirm.password}" required>
+                </label>
+                <p id="passwordError" class="error">Passwords do not match.</p>
+            </div>
+
+            <!-- ROLE -->
+            <div class="input-field">
+                <label>
+                    <select th:field="*{role}" required>
+                        <option value="" disabled selected>Select role</option>
+                        <option value="CUSTOMER">CUSTOMER</option>
+                        <option value="VENDOR">VENDOR</option>
+                    </select>
+                </label>
+            </div>
+
+            <!-- VENDOR (optional nested object) -->
+            <div class="input-field vendor-field" style="display: none;">
+                <label>
+                    <input type="text" th:field="*{vendor.shopName}" placeholder="Vendor's shop name" required>
+                </label>
+            </div>
+
+            <div class="input-field vendor-field" style="display: none;">
+                <label>
+                    <input type="text" th:field="*{vendor.description}" placeholder="Description of shop" required>
+                </label>
+            </div>
+
+
+            <button class="btn" type="submit" th:text="#{register}"></button>
+        </form>
+
+        <a class="link" th:href="@{/login}" th:text="#{already.have.account}"></a>
+    </div>
+</main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const roleSelect = document.querySelector("select[name='role']");
+        const vendorFields = document.querySelectorAll(".vendor-field");
+
+        function updateVendorFields() {
+            if (roleSelect.value === "VENDOR") {
+                vendorFields.forEach(f => f.style.display = "block");
+            } else {
+                vendorFields.forEach(f => f.style.display = "none");
+            }
+        }
+
+        roleSelect.addEventListener("change", updateVendorFields);
+
+        // initial load
+        updateVendorFields();
+    });
+
+    function previewImage(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            document.getElementById('preview').src = reader.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    // Use real DOM ids instead of th: attributes (Thymeleaf replaces th:* at render time)
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("registerForm");
+        const passwordInput = document.getElementById("password");
+        const confirmInput = document.getElementById("confirmPassword");
+        const errorMsg = document.getElementById("passwordError");
+        const submitBtn = document.getElementById("submitBtn");
+
+        if (!form || !passwordInput || !confirmInput) {
+            // defensive: if something's missing, do nothing (prevents runtime errors)
+            console.error("Register form elements not found.");
+            return;
+        }
+
+        // Helper: check match and update UI
+        function validatePasswords() {
+            const p = passwordInput.value;
+            const c = confirmInput.value;
+
+            // If both empty, keep error hidden (let HTML required attribute handle emptiness on submit)
+            if (p === "" && c === "") {
+                errorMsg.style.display = "none";
+                submitBtn.disabled = false;
+                return true;
+            }
+
+            if (p !== c) {
+                errorMsg.style.display = "block";
+                submitBtn.disabled = true;
+                return false;
+            } else {
+                errorMsg.style.display = "none";
+                submitBtn.disabled = false;
+                return true;
+            }
+        }
+
+        // Live validation while user types
+        passwordInput.addEventListener("input", validatePasswords);
+        confirmInput.addEventListener("input", validatePasswords);
+
+        // Final check on submit (extra safety)
+        form.addEventListener("submit", (e) => {
+            if (!validatePasswords()) {
+                e.preventDefault();
+                confirmInput.focus();
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

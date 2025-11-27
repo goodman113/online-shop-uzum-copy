@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Orders</title>
+    <style>
+
+        .payment-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn-pay {
+            width: 100%;
+            padding: 12px 24px;
+            background-color: #7000FF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-pay:hover {
+            background-color: #5c00d6;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 32px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            margin-bottom: 24px;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .payment-info {
+            background-color: #f5f5f5;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #7000FF;
+        }
+
+        .error-message {
+            display: block;
+            color: #d32f2f;
+            font-size: 12px;
+            margin-top: 4px;
+            min-height: 16px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: #7000FF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 8px;
+        }
+
+        .btn-submit:hover {
+            background-color: #5c00d6;
+        }
+
+        .btn-submit:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .verification-message {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .timer-container {
+            text-align: center;
+            margin: 16px 0;
+        }
+
+        .timer-text {
+            color: #666;
+            font-size: 14px;
+        }
+
+        #timer {
+            font-weight: 600;
+            color: #7000FF;
+        }
+
+        .btn-resend {
+            width: 100%;
+            padding: 14px;
+            background-color: #fff;
+            color: #7000FF;
+            border: 2px solid #7000FF;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 12px;
+        }
+
+        .btn-resend:hover {
+            background-color: #7000FF;
+            color: white;
+        }
+
+        .btn-resend:disabled {
+            background-color: #f5f5f5;
+            color: #ccc;
+            border-color: #ccc;
+            cursor: not-allowed;
+        }
+        /* Orders List */
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Order Card */
+        .order-card {
+            background-color: #fff;
+            border: 1px solid #e5e5e7;
+            border-radius: 12px;
+            padding: 24px;
+            transition: box-shadow 0.2s;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Order Header */
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e5e7;
+        }
+
+        .order-id {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .copy-icon {
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .copy-icon:hover {
+            background-color: #f5f5f7;
+        }
+
+        /* Order Details */
+        .order-details {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .detail-row {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .detail-label {
+            color: #6e6e73;
+            font-size: 15px;
+        }
+
+        .detail-value {
+            color: #1d1d1f;
+            font-size: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            width: fit-content;
+        }
+
+        .update-time {
+            color: #6e6e73;
+            font-size: 13px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .detail-row {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+
+            .order-card {
+                padding: 16px;
+            }
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Left Sidebar */
+        .sidebar {
+            width: 400px;
+            background-color: #fff;
+            padding: 40px 0;
+            border-right: 1px solid #e5e5e7;
+        }
+
+        .username {
+            font-size: 32px;
+            font-weight: 600;
+            padding: 0 40px 40px;
+            color: #1d1d1f;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 16px 40px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 17px;
+        }
+
+        .nav-item:hover {
+            background-color: #f5f5f7;
+        }
+
+        .nav-item.active {
+            background-color: #e8e8ed;
+        }
+
+        .notification-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #7c3aed;
+            border-radius: 50%;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 40px 60px;
+            max-width: 1200px;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        /* Filter Tabs */
+        .filter-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .filter-tab {
+            padding: 10px 24px;
+            border-radius: 24px;
+            background-color: #e8e8ed;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: #1d1d1f;
+        }
+
+        .filter-tab:hover {
+            background-color: #d2d2d7;
+        }
+
+        .filter-tab.active {
+            background-color: #1d1d1f;
+            color: #fff;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state h2 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+        }
+
+        .empty-state p {
+            font-size: 17px;
+            color: #6e6e73;
+            margin-bottom: 12px;
+        }
+
+        .payment-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn-pay {
+            width: 100%;
+            padding: 12px 24px;
+            background-color: #7000FF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-pay:hover {
+            background-color: #5c00d6;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 32px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            margin-bottom: 24px;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .payment-info {
+            background-color: #f5f5f5;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #7000FF;
+        }
+
+        .error-message {
+            display: block;
+            color: #d32f2f;
+            font-size: 12px;
+            margin-top: 4px;
+            min-height: 16px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: #7000FF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 8px;
+        }
+
+        .btn-submit:hover {
+            background-color: #5c00d6;
+        }
+
+        .btn-submit:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 32px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            margin-bottom: 24px;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .payment-info {
+            background-color: #f5f5f5;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #7000FF;
+        }
+
+        .error-message {
+            display: block;
+            color: #d32f2f;
+            font-size: 12px;
+            margin-top: 4px;
+            min-height: 16px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: #7000FF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 8px;
+        }
+
+        .btn-submit:hover {
+            background-color: #5c00d6;
+        }
+
+        .btn-submit:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .schedule-link {
+            color: #7c3aed;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .schedule-link:hover {
+            text-decoration: underline;
+        }
+
+        .electronic-receipt {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #6e6e73;
+            font-size: 15px;
+            margin-top: 16px;
+        }
+
+        .checkbox-icon {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d2d2d7;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .checkbox-icon.checked {
+            background-color: #7c3aed;
+            border-color: #7c3aed;
+            color: #fff;
+        }
+
+        /* Order Items Dropdown */
+        .order-items {
+            margin-top: 24px;
+            border-top: 1px solid #e5e5e7;
+            padding-top: 24px;
+        }
+
+        .items-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 12px 0;
+        }
+
+        .items-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .dropdown-icon {
+            transition: transform 0.3s;
+            color: #6e6e73;
+        }
+
+        .dropdown-icon.open {
+            transform: rotate(180deg);
+        }
+
+        .items-list {
+            display: none;
+            padding-top: 16px;
+        }
+
+        .items-list.open {
+            display: block;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f7;
+            font-size: 15px;
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            color: #1d1d1f;
+            font-weight: 500;
+        }
+
+        .item-quantity,
+        .item-price {
+            color: #6e6e73;
+        }
+
+        .courier-note {
+            color: #7c3aed;
+            font-size: 14px;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Profile Section */
+        .profile-card {
+            background-color: #fff;
+            border: 1px solid #e5e5e7;
+            border-radius: 12px;
+            padding: 32px;
+        }
+
+        .profile-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #f5f5f7;
+        }
+
+        .profile-row:last-child {
+            border-bottom: none;
+        }
+
+        .profile-label {
+            color: #6e6e73;
+            font-size: 15px;
+        }
+
+        .profile-value {
+            color: #1d1d1f;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        /* Reviews Section */
+        .review-card {
+            background-color: #fff;
+            border: 1px solid #e5e5e7;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .review-product {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .review-rating {
+            color: #fbbf24;
+            font-size: 16px;
+        }
+
+        .review-date {
+            color: #6e6e73;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .review-text {
+            color: #1d1d1f;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e5e7;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .detail-row {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+        <h1 class="username" th:text="${user.username}">Muhammadali Yoqubjonov</h1>
+        <ul class="nav-menu">
+            <li class="nav-item active" onclick="showSection('orders')">
+                <span>Заказы</span>
+            </li>
+            <li class="nav-item" onclick="showSection('reviews')">
+                <span>Отзывы</span>
+                <span class="notification-dot"></span>
+            </li>
+            <li class="nav-item" onclick="showSection('profile')">
+                <span>Профиль</span>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Orders Section -->
+        <div id="orders" class="content-section active">
+            <div class="filter-tabs">
+                <button class="filter-tab" onclick="filterOrders('all')" th:classappend="${filter == 'all'} ? 'active' : ''">Все заказы</button>
+                <button class="filter-tab" onclick="filterOrders('unpaid')" th:classappend="${filter == 'unpaid'} ? 'active' : ''">Неоплаченные</button>
+                <button class="filter-tab" onclick="filterOrders('active')" th:classappend="${filter == 'active'} ? 'active' : ''">Активные</button>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" th:if="${#lists.isEmpty(orders)}" style="display: none;">
+                <h2>Здесь пусто</h2>
+                <p>У вас отсутствуют активные заказы!</p>
+                <p>Воспользуйтесь поиском, чтобы найти всё что нужно.</p>
+                <button class="btn-primary">Начать покупки</button>
+                <a href="#" class="btn-link">Вернуться на главную</a>
+            </div>
+
+            <!-- Orders List -->
+            <div class="orders-list">
+                <div class="order-card" th:each="order : ${orders}">
+                    <div class="order-header">
+                        <span class="order-id">ID заказа <span th:text="${order.id}">56806718</span></span>
+                        <span class="copy-icon" onclick="copyOrderId(this)" title="Copy">📋</span>
+                    </div>
+
+                    <div class="order-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Статус:</span>
+                            <div class="detail-value">
+                        <span class="status-badge"
+                              th:classappend="${order.status == 'CANCELLED'} ? 'status-returned' :
+                                             (${order.status == 'UNPAID'} ? 'status-unpaid' : 'status-active')"
+                              th:text="${order.status}">Возвращён</span>
+                                <span class="update-time" th:text="'Обновлен ' + ${order.updatedAt}">Обновлен 2025-05-05 09:53</span>
+                            </div>
+                        </div>
+
+                        <div class="detail-row">
+                            <span class="detail-label">Срок хранения:</span>
+                            <span class="detail-value" th:text="${#temporals.format(order.updatedAt.plusDays(2), 'dd MMMM')}">до 4 мая</span>
+                        </div>
+
+                        <div class="detail-row">
+                            <span class="detail-label">Пункт выдачи:</span>
+                            <span class="detail-value" th:text="${order.address}">г. Ташкент, Юнусабадский район, проспект Амира Темура, дом 70</span>
+                        </div>
+
+                        <div class="detail-row" style="display: none;">
+                            <span class="detail-label"></span>
+                            <a href="#" class="schedule-link">График работы ⌄</a>
+                        </div>
+
+                        <div class="detail-row">
+                            <span class="detail-label">Дата заказа:</span>
+                            <span class="detail-value" th:text="${order.createdAt}">понедельник, 28 апреля 2025 22:24</span>
+                        </div>
+
+                        <div class="detail-row">
+                            <span class="detail-label">Сумма заказа:</span>
+                            <span class="detail-value" th:text="${order.totalPrice}">24 000 сум</span>
+                        </div>
+
+                        <div class="electronic-receipt">
+                            <div class="checkbox-icon checked">✓</div>
+                            <span>Электронный чек</span>
+                        </div>
+
+                        <!-- Pay Button for Unpaid Orders with Card Payment Method -->
+                        <div th:if="${order.status == 'UNPAID' and order.payingMethod == T(uz.pdp.clickup.enums.PayingMethod).CARD}" class="payment-section">
+                            <button class="btn-pay"
+                                    th:attr="data-order-id=${order.id}, data-amount=${order.totalPrice}"
+                                    onclick="openPaymentModal(this)">
+                                Оплатить заказ
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Order Items Dropdown -->
+                    <div class="order-items">
+                        <div class="items-header" onclick="toggleItems(this)">
+                            <h3><span th:text="${#lists.size(order.items)}">1</span> товар</h3>
+                            <span class="dropdown-icon">⌄</span>
+                        </div>
+                        <div class="items-list">
+                            <div class="item-row" th:each="item : ${order.items}">
+                                <span class="item-name" th:text="${item.product.name}">Product Name</span>
+                                <span class="item-quantity" th:text="${item.quantity} + ' шт.'">1 шт.</span>
+                                <span class="item-price" th:text="${item.price} + ' сум'">24 000 сум</span>
+                            </div>
+                            <div class="courier-note" th:if="${order.withСourier}">
+                                🚚 Доставка курьером
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Modal -->
+        <div id="paymentModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closePaymentModal()">&times;</span>
+                <h2>Оплата заказа</h2>
+
+                <div class="payment-info">
+                    <div class="info-row">
+                        <span class="info-label">ID заказа:</span>
+                        <span class="info-value" id="modalOrderId">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Сумма:</span>
+                        <span class="info-value" id="modalAmount">-</span>
+                    </div>
+                </div>
+
+                <!-- Card Details Form -->
+                <form id="paymentForm" onsubmit="submitPayment(event)">
+                    <div class="form-group">
+                        <label for="cardNumber">Номер карты</label>
+                        <input type="text"
+                               id="cardNumber"
+                               name="cardNumber"
+                               placeholder="0000 0000 0000 0000"
+                               maxlength="19"
+                               required
+                               oninput="formatCardNumber(this)">
+                        <span class="error-message" id="cardError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expireDate">Срок действия</label>
+                        <input type="text"
+                               id="expireDate"
+                               name="expireDate"
+                               placeholder="MM/YY"
+                               maxlength="5"
+                               required
+                               oninput="formatExpireDate(this)">
+                        <span class="error-message" id="expireError"></span>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Оплатить</button>
+                </form>
+
+                <!-- Verification Form (hidden initially) -->
+                <div id="verificationSection" style="display: none;">
+                    <p class="verification-message">На вашу карту отправлен код подтверждения</p>
+
+                    <div class="form-group">
+                        <label for="verificationCode">Код подтверждения</label>
+                        <input type="text"
+                               id="verificationCode"
+                               name="verificationCode"
+                               placeholder="000000"
+                               maxlength="6"
+                               required
+                               oninput="formatVerificationCode(this)">
+                        <span class="error-message" id="verifyError"></span>
+                    </div>
+
+                    <div class="timer-container">
+                        <span class="timer-text">Код действителен: <span id="timer">01:00</span></span>
+                    </div>
+
+                    <button id="verifyBtn" class="btn-submit" onclick="verifyCode()">Подтвердить</button>
+                    <button id="resendBtn" class="btn-resend" onclick="resendCode()" style="display: none;">Отправить код повторно</button>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Reviews Section -->
+        <div id="reviews" class="content-section">
+            <h2 style="font-size: 32px; font-weight: 600; margin-bottom: 24px;">Мои отзывы</h2>
+
+            <div class="review-card" th:each="review : ${reviews}">
+                <div class="review-header">
+                    <span class="review-product" th:text="${review.product.name}">Product Name</span>
+                    <span class="review-rating" th:text="${review.rating}">★★★★★</span>
+                </div>
+                <div class="review-date" th:text="${review.createdAt}">15 марта 2025</div>
+                <p class="review-text" th:text="${review.comment}">Great product! Highly recommend.</p>
+            </div>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(reviews)}">
+                <h2>Здесь пусто</h2>
+                <p>У вас пока нет отзывов</p>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div id="profile" class="content-section">
+            <h2 style="font-size: 32px; font-weight: 600; margin-bottom: 24px;">Профиль</h2>
+
+            <div class="profile-card">
+                <div class="profile-row">
+                    <span class="profile-label">Имя пользователя:</span>
+                    <span class="profile-value" th:text="${user.username}">Muhammadali Yoqubjonov</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Email:</span>
+                    <span class="profile-value" th:text="${user.email}">user@example.com</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Телефон:</span>
+                    <span class="profile-value" th:text="${user.phone}">+998 90 123 45 67</span>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    let currentOrderId = null;
+    let timerInterval = null;
+    let timeLeft = 60;
+
+    function openPaymentModal(button) {
+        const orderId = button.getAttribute('data-order-id');
+        const amount = button.getAttribute('data-amount');
+
+        currentOrderId = orderId;
+
+        document.getElementById('modalOrderId').textContent = orderId;
+        document.getElementById('modalAmount').textContent = amount + ' сум';
+        document.getElementById('paymentModal').style.display = 'block';
+
+        // Reset form and show card details
+        document.getElementById('paymentForm').reset();
+        document.getElementById('paymentForm').style.display = 'block';
+        document.getElementById('verificationSection').style.display = 'none';
+        document.getElementById('cardError').textContent = '';
+        document.getElementById('expireError').textContent = '';
+
+        // Clear any existing timer
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').style.display = 'none';
+        currentOrderId = null;
+
+        // Clear timer
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        // Reset views
+        document.getElementById('paymentForm').style.display = 'block';
+        document.getElementById('verificationSection').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('paymentModal');
+        if (event.target === modal) {
+            closePaymentModal();
+        }
+    }
+
+    function formatCardNumber(input) {
+        let value = input.value.replace(/\s/g, '');
+        value = value.replace(/\D/g, '');
+        value = value.substring(0, 16);
+
+        let formatted = value.match(/.{1,4}/g);
+        input.value = formatted ? formatted.join(' ') : value;
+
+        document.getElementById('cardError').textContent = '';
+    }
+
+    function formatExpireDate(input) {
+        let value = input.value.replace(/\D/g, '');
+
+        if (value.length >= 2) {
+            value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        }
+
+        input.value = value;
+        document.getElementById('expireError').textContent = '';
+    }
+
+    function formatVerificationCode(input) {
+        let value = input.value.replace(/\D/g, '');
+        value = value.substring(0, 6);
+        input.value = value;
+        document.getElementById('verifyError').textContent = '';
+    }
+
+    function validateCardNumber(cardNumber) {
+        const cleaned = cardNumber.replace(/\s/g, '');
+        return cleaned.length === 16 && /^\d+$/.test(cleaned);
+    }
+
+    function validateExpireDate(expireDate) {
+        const pattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
+        if (!pattern.test(expireDate)) {
+            return false;
+        }
+
+        const [month, year] = expireDate.split('/');
+        const expiry = new Date(2000 + parseInt(year), parseInt(month));
+        const today = new Date();
+
+        return expiry > today;
+    }
+
+    function startTimer() {
+        timeLeft = 60;
+        document.getElementById('timer').textContent = '01:00';
+        document.getElementById('verifyBtn').style.display = 'block';
+        document.getElementById('resendBtn').style.display = 'none';
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                document.getElementById('verifyBtn').style.display = 'none';
+                document.getElementById('resendBtn').style.display = 'block';
+                document.getElementById('timer').textContent = '00:00';
+            }
+        }, 1000);
+    }
+
+    function submitPayment(event) {
+        event.preventDefault();
+
+        const cardNumber = document.getElementById('cardNumber').value;
+        const expireDate = document.getElementById('expireDate').value;
+
+        let isValid = true;
+
+        if (!validateCardNumber(cardNumber)) {
+            document.getElementById('cardError').textContent = 'Введите корректный номер карты (16 цифр)';
+            isValid = false;
+        }
+
+        if (!validateExpireDate(expireDate)) {
+            document.getElementById('expireError').textContent = 'Введите корректный срок действия (MM/YY)';
+            isValid = false;
+        }
+
+        if (!isValid) {
+            return;
+        }
+
+        const paymentData = {
+            orderId: currentOrderId,
+            cardNumber: cardNumber.replace(/\s/g, ''),
+            expireDate: expireDate
+        };
+
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Обработка...';
+
+        // Send card details to backend
+        fetch('/api/orders/pay', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(paymentData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Hide card form, show verification section
+                    document.getElementById('paymentForm').style.display = 'none';
+                    document.getElementById('verificationSection').style.display = 'block';
+                    document.getElementById('verificationCode').value = '';
+                    document.getElementById('verifyError').textContent = '';
+
+                    // Start the timer
+                    startTimer();
+                } else {
+                    alert('Ошибка: ' + (data.message || 'Попробуйте снова'));
+                }
+            })
+            .catch(error => {
+                console.error('Payment error:', error);
+                alert('Произошла ошибка. Попробуйте позже.');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Оплатить';
+            });
+    }
+
+    function verifyCode() {
+        const code = document.getElementById('verificationCode').value;
+
+        if (code.length !== 6) {
+            document.getElementById('verifyError').textContent = 'Введите 6-значный код';
+            return;
+        }
+
+        const verifyBtn = document.getElementById('verifyBtn');
+        verifyBtn.disabled = true;
+        verifyBtn.textContent = 'Проверка...';
+
+        // Send verification code to backend
+        fetch('/api/orders/verify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                orderId: currentOrderId,
+                code: code
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Оплата прошла успешно!');
+                    closePaymentModal();
+                    location.reload();
+                } else {
+                    document.getElementById('verifyError').textContent = data.message || 'Неверный код';
+                }
+            })
+            .catch(error => {
+                console.error('Verification error:', error);
+                alert('Произошла ошибка. Попробуйте позже.');
+            })
+            .finally(() => {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Подтвердить';
+            });
+    }
+
+    function resendCode() {
+        const resendBtn = document.getElementById('resendBtn');
+        resendBtn.disabled = true;
+        resendBtn.textContent = 'Отправка...';
+
+        // Request new code from backend
+        fetch('/api/orders/resend-code', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                orderId: currentOrderId
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('verificationCode').value = '';
+                    document.getElementById('verifyError').textContent = '';
+                    startTimer();
+                } else {
+                    alert('Ошибка: ' + (data.message || 'Не удалось отправить код'));
+                }
+            })
+            .catch(error => {
+                console.error('Resend error:', error);
+                alert('Произошла ошибка. Попробуйте позже.');
+            })
+            .finally(() => {
+                resendBtn.disabled = false;
+                resendBtn.textContent = 'Отправить код повторно';
+            });
+    }
+</script>
+
+<script th:inline="javascript">
+    // Navigation
+    function showSection(sectionId) {
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        document.getElementById(sectionId).classList.add('active');
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.target.closest('.nav-item').classList.add('active');
+    }
+
+    // Filter orders
+    function filterOrders(filter) {
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // Send request to server to filter orders
+        window.location.href = `?filter=${filter}`;
+    }
+
+    // Toggle order items
+    function toggleItems(element) {
+        const itemsList = element.nextElementSibling;
+        const icon = element.querySelector('.dropdown-icon');
+
+        itemsList.classList.toggle('open');
+        icon.classList.toggle('open');
+    }
+
+    // Copy order ID
+    function copyOrderId(element) {
+        const orderId = element.previousElementSibling.textContent.replace('ID заказа ', '');
+        navigator.clipboard.writeText(orderId).then(() => {
+            element.textContent = '✓';
+            setTimeout(() => {
+                element.textContent = '📋';
+            }, 2000);
+        });
+    }
+
+    // Sample data for demonstration
+    document.addEventListener('DOMContentLoaded', function() {
+        // If using static data for demo, uncomment below
+        /*
+        const sampleOrders = [
+            {
+                id: '56806718',
+                status: 'RETURNED',
+                statusText: 'Возвращён',
+                updateTime: '2025-05-05 09:53',
+                shelfLife: 'до 4 мая',
+                pickupAddress: 'г. Ташкент, Юнусабадский район, проспект Амира Темура, дом 70',
+                orderDate: 'понедельник, 28 апреля 2025 22:24',
+                totalPrice: '24 000 сум',
+                hasCourier: false,
+                items: [
+                    { productName: 'Product 1', quantity: 1, price: '24 000' }
+                ]
+            }
+        ];
+        */
+    });
+</script>
+</body>
+</html>

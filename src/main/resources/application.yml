@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: yandex-uzum-market-boot
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+  datasource:
+    url: jdbc:postgresql://localhost:5432/yandex_uzum_market
+    username: postgres
+    password: root123
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  data:
+    redis:
+      port: 6379
+      timeout: 60000
+      host: localhost

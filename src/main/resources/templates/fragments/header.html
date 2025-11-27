@@ -1,0 +1,34 @@
+<!-- fragments/header.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<header th:fragment="adminHeader(currentPage)">
+    <a href="/" class="logo">ShopFlow</a>
+
+    <div class="nav-links">
+
+        <a th:href="@{/admin/dashboard}"
+           th:classappend="${currentPage.endsWith('/admin/dashboard')} ? 'active' : ''">
+            Dashboard
+        </a>
+
+        <a th:href="@{/admin/categories}"
+           th:classappend="${currentPage.endsWith('/admin/categories')} ? 'active' : ''">
+            Categories
+        </a>
+
+        <a th:href="@{/admin/vendors}"
+           th:classappend="${currentPage.endsWith('/admin/vendors')} ? 'active' : ''">
+            Vendors
+        </a>
+
+        <a th:href="@{/admin/orders}"
+           th:classappend="${currentPage.endsWith('/admin/orders')} ? 'active' : ''">
+            Orders
+        </a>
+
+        <span class="admin-badge">ADMIN</span>
+    </div>
+</header>
+</body>
+</html>

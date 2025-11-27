@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Ali Market</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 40px;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #7c3aed;
+            letter-spacing: -1px;
+        }
+
+        .logo span {
+            color: #a78bfa;
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .security-badge i {
+            color: #10b981;
+        }
+
+        .user-info-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #374151;
+        }
+
+        .user-info-header .user-name {
+            font-weight: 600;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 30px;
+        }
+
+        .checkout-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 25px;
+        }
+
+        /* Left Side */
+        .checkout-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        /* Delivery Options */
+        .delivery-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .delivery-option {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .delivery-option:hover {
+            border-color: #7c3aed;
+        }
+
+        .delivery-option.active {
+            border-color: #7c3aed;
+            background: #f3f4f6;
+        }
+
+        .delivery-option input[type="radio"] {
+            display: none;
+        }
+
+        .delivery-option-icon {
+            font-size: 32px;
+            color: #7c3aed;
+            margin-bottom: 10px;
+        }
+
+        .delivery-option-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .delivery-option-desc {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .delivery-option-price {
+            font-size: 14px;
+            color: #10b981;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* Address Section */
+        .address-section {
+            display: none;
+        }
+
+        .address-section.active {
+            display: block;
+        }
+
+        .current-address {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .current-address i {
+            color: #7c3aed;
+            font-size: 24px;
+            margin-top: 5px;
+        }
+
+        .address-details {
+            flex: 1;
+        }
+
+        .address-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .address-text {
+            font-size: 14px;
+            color: #1f2937;
+            line-height: 1.5;
+        }
+
+        .change-address-btn {
+            background: transparent;
+            border: 2px solid #7c3aed;
+            color: #7c3aed;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .change-address-btn:hover {
+            background: #7c3aed;
+            color: #fff;
+        }
+
+        /* Recipient Info */
+        .recipient-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .recipient-details {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .recipient-icon {
+            width: 50px;
+            height: 50px;
+            background: #7c3aed;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .recipient-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .recipient-phone {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .edit-btn {
+            background: transparent;
+            border: none;
+            color: #7c3aed;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .payment-option {
+            display: flex;
+            align-items: center;
+            padding: 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .payment-option:hover {
+            border-color: #7c3aed;
+        }
+
+        .payment-option.active {
+            border-color: #7c3aed;
+            background: #f3f4f6;
+        }
+
+        .payment-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            accent-color: #7c3aed;
+            cursor: pointer;
+        }
+
+        .payment-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            color: #7c3aed;
+        }
+
+        .payment-details {
+            flex: 1;
+        }
+
+        .payment-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .payment-desc {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        /* Delivery Date */
+        .delivery-date-info {
+            padding: 20px;
+            background: #ecfdf5;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+
+        .delivery-date-info h4 {
+            font-size: 14px;
+            color: #059669;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .delivery-date-info p {
+            font-size: 13px;
+            color: #047857;
+        }
+
+        /* Order Summary */
+        .summary-panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .summary-row.items {
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            margin-bottom: 12px;
+        }
+
+        .summary-row.discount {
+            color: #10b981;
+        }
+
+        .summary-row.total {
+            padding-top: 12px;
+            border-top: 2px solid #f3f4f6;
+            margin-top: 12px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .summary-price {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .total-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: #7c3aed;
+        }
+
+        .place-order-btn {
+            width: 100%;
+            padding: 18px;
+            background: #7c3aed;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .place-order-btn:hover {
+            background: #6d28d9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .place-order-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .agreement-text {
+            font-size: 11px;
+            color: #9ca3af;
+            line-height: 1.5;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .agreement-text a {
+            color: #7c3aed;
+            text-decoration: none;
+        }
+
+        .agreement-text a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 1024px) {
+            .checkout-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-panel {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+
+            .delivery-options {
+                flex-direction: column;
+            }
+        }
+        .address-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right:0; bottom:0;
+            background: rgba(0,0,0,0.6);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .address-modal {
+            background: white;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            animation: modalShow 0.3s ease;
+        }
+
+        @keyframes modalShow {
+            from { opacity:0; transform:scale(0.9); }
+            to { opacity:1; transform:scale(1); }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #7c3aed;
+            color: white;
+        }
+
+        .modal-header h3 { margin:0; font-size:20px; }
+
+        .close-btn {
+            background:none; border:none; color:white; font-size:28px; cursor:pointer; width:40px; height:40px;
+        }
+
+        .modal-body { padding:24px; }
+
+        .modal-footer {
+            padding: 20px 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            border-top: 1px solid #eee;
+            background: #f9fafb;
+        }
+
+        .cancel-btn, .confirm-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .cancel-btn {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .confirm-btn {
+            transition: all 0.3s;
+            pointer-events: auto !important;
+        }
+
+        .confirm-btn:disabled {
+            background: #9ca3af !important;
+            opacity: 0.6;
+            cursor: not-allowed !important;
+        }
+
+        .address-modal-overlay {
+            pointer-events: auto;
+        }
+
+        .address-modal {
+            pointer-events: auto;
+        }
+        .address-section.active,
+        .address-section[style*="block"] {
+            display: block !important;
+        }
+
+        #currentAddressBlock {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        #currentAddressBlock .address-icon i {
+            color: #7c3aed;
+            font-size: 24px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="logo">Ali <span>Market</span></div>
+    <div class="security-badge">
+        <i class="fas fa-lock"></i>
+        <span>Secure Connection</span>
+    </div>
+    <div class="user-info-header">
+        <span class="user-name" th:text="${user != null ? user.username : 'Guest'}">M. Yoqubjonov</span>
+    </div>
+</header>
+
+<div class="container">
+    <h1 class="page-title">Checkout</h1>
+
+    <div class="checkout-wrapper">
+        <!-- Left Side: Checkout Form -->
+        <div class="checkout-section">
+
+            <!-- Delivery Method -->
+            <div class="section-card">
+                <h2 class="section-title">Delivery Method</h2>
+
+                <div class="delivery-options">
+                    <label class="delivery-option active" onclick="selectDelivery('pickup')">
+                        <input type="radio" name="delivery" value="pickup" checked>
+                        <div class="delivery-option-icon">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="delivery-option-name">Pickup Point</div>
+                        <div class="delivery-option-price">Free</div>
+                    </label>
+
+                    <label class="delivery-option" onclick="selectDelivery('courier')">
+                        <input type="radio" name="delivery" value="courier">
+                        <div class="delivery-option-icon">
+                            <i class="fas fa-shipping-fast"></i>
+                        </div>
+                        <div class="delivery-option-name">Courier Delivery</div>
+                        <div class="delivery-option-price" th:text="'from ' + ${deliveryPrice != null ? deliveryPrice : 30000} + ' UZS'">from 30 000 UZS</div>
+                    </label>
+                </div>
+
+                <!-- Address Section (only for Courier) -->
+                <div class="address-section" id="addressSection" style="display:none;">
+                    <div class="current-address" id="currentAddressBlock" style="display:none;">
+                        <div class="address-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="address-details">
+                            <div class="address-label">Delivery Address</div>
+                            <div class="address-text" id="selectedAddressText">Not selected</div>
+                        </div>
+                    </div>
+                    <button type="button" class="change-address-btn" onclick="openAddressModal()">
+                        Choose Delivery Address on Map
+                    </button>
+                </div>
+
+                <!-- Address Modal with Yandex Map -->
+                <div class="address-modal-overlay" id="addressModal" style="display:none;" onclick="if(event.target === this) closeAddressModal()">
+                    <div class="address-modal" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <h3>Choose Delivery Address</h3>
+                            <button type="button" class="close-btn" onclick="closeAddressModal()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- This div fixes map click blocking -->
+                            <div id="yandexMap" style="width:100%; height:400px; border-radius:12px; position:relative;"></div>
+
+                            <div class="address-result" id="addressResult" style="margin-top:15px; padding:12px; background:#f0fdf4; border-radius:8px; font-weight:500; color:#166534;">
+                                Click on the map to select your address
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="pointer-events: auto !important;">
+                            <button type="button" class="cancel-btn" onclick="closeAddressModal()">Cancel</button>
+                            <button type="button" class="confirm-btn" id="confirmAddressBtn" onclick="confirmAddress()" disabled>
+                                Confirm Address
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipient Information -->
+            <div class="section-card">
+                <h2 class="section-title">Recipient</h2>
+
+                <div class="recipient-info">
+                    <div class="recipient-details">
+                        <div class="recipient-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <div class="recipient-name" th:text="${user != null ? user.username : 'Muhammadali Yoqubjonov'}">Muhammadali Yoqubjonov</div>
+                            <div class="recipient-phone" th:text="${user != null ? user.phone : '998991709035'}">998991709035</div>
+                        </div>
+                    </div>
+                    <button class="edit-btn" onclick="editRecipient()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Delivery Date -->
+            <div class="section-card">
+                <div class="delivery-date-info">
+                    <h4>
+                        <i class="fas fa-calendar-check"></i>
+                        Tomorrow, November 25
+                    </h4>
+                    <p>Your order will be delivered on the specified date</p>
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="section-card">
+                <h2 class="section-title">Payment Method</h2>
+
+                <div class="payment-methods">
+                    <label class="payment-option active" onclick="selectPayment('card')">
+                        <input type="radio" name="payment" value="card" checked>
+                        <div class="payment-icon">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="payment-details">
+                            <div class="payment-name">Pay with Card</div>
+                            <div class="payment-desc">Visa, Mastercard, Humo, Uzcard</div>
+                        </div>
+                    </label>
+
+                    <label class="payment-option" onclick="selectPayment('cash')">
+                        <input type="radio" name="payment" value="cash">
+                        <div class="payment-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="payment-details">
+                            <div class="payment-name">Cash on Delivery</div>
+                            <div class="payment-desc">Pay when you receive the order</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Promo Code Section -->
+            <div class="section-card">
+                <h2 class="section-title">Promo Code</h2>
+                <button class="change-address-btn" onclick="addPromocode()">
+                    <i class="fas fa-tag"></i> Add Promo Code
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Right Side: Order Summary -->
+        <div class="summary-panel">
+            <h3 class="summary-title">Your Order</h3>
+
+            <div class="summary-row items">
+                <span>Items (<span th:text="${itemCount != null ? itemCount : 2}">2</span>):</span>
+                <span class="summary-price" th:text="${itemsTotal != null ? itemsTotal : '264 990'} + ' UZS'">264 990 UZS</span>
+            </div>
+
+            <div class="summary-row">
+                <span>Delivery:</span>
+                <span class="summary-price delivery-price" id="deliveryPriceDisplay">Free</span>
+            </div>
+
+            <div class="summary-row discount" th:if="${discount != null && discount > 0}">
+                <span>Discount:</span>
+                <span class="summary-price" th:text="'-' + ${discount} + ' UZS'">-124 760 UZS</span>
+            </div>
+
+            <div class="summary-row total">
+                <span>Total:</span>
+                <span class="total-amount" id="totalAmountDisplay" th:text="${totalAmount != null ? totalAmount : '170 230'} + ' UZS'">170 230 UZS</span>
+            </div>
+
+            <button class="place-order-btn" onclick="placeOrder()">
+                Place Order
+            </button>
+
+            <p class="agreement-text">
+                By placing an order, you agree to the processing of personal data in accordance with the
+                <a href="#">Privacy Policy</a>, and you accept the
+                <a href="#">User Agreement</a>.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    let selectedDelivery = 'pickup';
+    let selectedPayment = 'card';
+    const deliveryCost = /*[[${deliveryPrice}]]*/ 30000;
+    const itemsTotal = /*[[${itemsTotal}]]*/ 264990;
+    const discount = /*[[${discount}]]*/ 124760;
+
+    function selectDelivery(type) {
+        selectedDelivery = type;
+
+        // Update UI
+        document.querySelectorAll('.delivery-option').forEach(el => el.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        // Show/hide address section
+        const addressSection = document.getElementById('addressSection');
+        const deliveryPriceDisplay = document.getElementById('deliveryPriceDisplay');
+
+        if (type === 'courier') {
+            addressSection.classList.add('active');
+            deliveryPriceDisplay.textContent = deliveryCost.toLocaleString() + ' UZS';
+        } else {
+            addressSection.classList.remove('active');
+            deliveryPriceDisplay.textContent = 'Free';
+        }
+
+        updateTotal();
+    }
+
+    function selectPayment(type) {
+        selectedPayment = type;
+        document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    function updateTotal() {
+        const deliveryAmount = selectedDelivery === 'pickup' ? 0 : deliveryCost;
+        const total = itemsTotal + deliveryAmount - discount;
+        document.getElementById('totalAmountDisplay').textContent = total.toLocaleString() + ' UZS';
+    }
+
+    function changeAddress() {
+        alert('Address selection modal will open here');
+    }
+
+    function editRecipient() {
+        alert('Recipient edit modal will open here');
+    }
+
+    function addPromocode() {
+        const code = prompt('Enter promo code:');
+        if (code) alert('Promo code applied: ' + code);
+    }
+
+    function placeOrder() {
+        // Get selected address (if exists)
+        const addressInput = document.getElementById('selectedAddressInput');
+        const deliveryAddress = addressInput ? addressInput.value : null;
+
+        // Require address for courier delivery
+        if (selectedDelivery === 'courier' && !deliveryAddress) {
+            alert('Please select a delivery address on the map!');
+            return;
+        }
+
+        const orderData = {
+            deliveryType: selectedDelivery,
+            paymentMethod: selectedPayment,
+            deliveryPrice: selectedDelivery === 'pickup' ? 0 : deliveryCost,
+            total: itemsTotal + (selectedDelivery === 'pickup' ? 0 : deliveryCost) - discount,
+            deliveryAddress: deliveryAddress  // ← NEW: full address string from Yandex Map
+        };
+
+        const btn = document.querySelector('.place-order-btn');
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+
+        fetch('/api/orders/place', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/orders?filter=all';
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to place order'));
+                    btn.disabled = false;
+                    btn.textContent = 'Place Order';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Network error. Try again.');
+                btn.disabled = false;
+                btn.textContent = 'Place Order';
+            })
+        window.location.href = '?filter=all';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateTotal();
+    });
+</script>
+
+<script src="https://api-maps.yandex.ru/2.1/?lang=en_US&apikey=0f70696d-b92f-456a-97e9-b779be9ebbf5"></script>
+<script>
+    let selectedAddress = null;
+    let ymap = null;
+    let placemark = null;
+
+    function openAddressModal() {
+        const modal = document.getElementById('addressModal');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        // Reset state
+        selectedAddress = null;
+        document.getElementById('addressResult').innerHTML = 'Click on the map to select your address';
+        const confirmBtn = document.getElementById('confirmAddressBtn');
+        confirmBtn.disabled = true;
+        confirmBtn.style.background = '#9ca3af';
+        confirmBtn.style.opacity = '0.6';
+
+        // Initialize map
+        setTimeout(initYandexMap, 300);
+    }
+
+    function closeAddressModal() {
+        document.getElementById('addressModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    function initYandexMap() {
+        ymaps.ready(() => {
+            if (ymap) {
+                ymap.destroy();
+            }
+
+            ymap = new ymaps.Map("yandexMap", {
+                center: [41.311081, 69.240562],
+                zoom: 13,
+                controls: ['zoomControl', 'fullscreenControl', 'searchControl']
+            });
+
+            // CRITICAL: Allow clicks on map
+            ymap.behaviors.enable('drag');
+            ymap.behaviors.enable('dblClickZoom');
+            ymap.behaviors.enable('multiTouch');
+
+            ymap.events.add('click', function (e) {
+                e.preventDefault(); // Prevent any default behavior
+                const coords = e.get('coords');
+
+                if (placemark) {
+                    ymap.geoObjects.remove(placemark);
+                }
+
+                placemark = new ymaps.Placemark(coords, {}, {
+                    preset: 'islands#redDotIcon'
+                });
+                ymap.geoObjects.add(placemark);
+
+                ymaps.geocode(coords, { kind: 'house' }).then(res => {
+                    const obj = res.geoObjects.get(0);
+                    selectedAddress = obj ? obj.getAddressLine() : coords.map(c => c.toFixed(6)).join(', ');
+
+                    document.getElementById('addressResult').innerHTML = `
+                        <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                        <strong>Selected:</strong> ${selectedAddress}
+                    `;
+
+                    // FULLY ENABLE BUTTON
+                    const btn = document.getElementById('confirmAddressBtn');
+                    btn.disabled = false;
+                    btn.style.background = '#7c3aed';
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                    btn.style.pointerEvents = 'auto';
+                });
+            });
+        });
+    }
+
+    function confirmAddress() {
+        if (!selectedAddress) {
+            alert("Please select an address first!");
+            return;
+        }
+
+        // Show in checkout
+        document.getElementById('selectedAddressText').textContent = selectedAddress;
+        document.getElementById('currentAddressBlock').style.display = 'flex';
+        document.querySelector('#addressSection .change-address-btn').textContent = 'Change Address';
+
+        // Save for backend
+        let input = document.getElementById('selectedAddressInput');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'deliveryAddress';
+            input.id = 'selectedAddressInput';
+            document.body.appendChild(input);
+        }
+        input.value = selectedAddress;
+
+        closeAddressModal();
+    }
+
+    // Keep your selectDelivery function
+    function selectDelivery(type) {
+        selectedDelivery = type;
+        document.querySelectorAll('.delivery-option').forEach(el => el.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        const addressSection = document.getElementById('addressSection');
+        const deliveryPriceDisplay = document.getElementById('deliveryPriceDisplay');
+
+        if (type === 'courier') {
+            addressSection.style.display = 'block';
+            deliveryPriceDisplay.textContent = '30,000 UZS';
+        } else {
+            addressSection.style.display = 'none';
+            deliveryPriceDisplay.textContent = 'Free';
+            document.getElementById('currentAddressBlock').style.display = 'none';
+        }
+        updateTotal();
+    }
+</script>
+</body>
+</html>
