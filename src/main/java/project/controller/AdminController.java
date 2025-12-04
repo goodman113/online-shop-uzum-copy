@@ -6,6 +6,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +23,7 @@ import project.model.dto.CategoryDto;
 import project.model.dto.SubCategoryDto;
 import project.model.dto.SubSubCategoryDto;
 import project.model.dto.UserDto;
+import project.model.enums.OrderStatus;
 import project.model.enums.Role;
 import project.repository.repository.*;
 import project.service.CategoryService;
@@ -27,6 +31,7 @@ import project.service.SubCategoryService;
 import project.service.SubSubCategoryService;
 import project.service.VendorService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +40,7 @@ import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
+@PreAuthorize("hasAnyRole('ADMIN')")
 @RequiredArgsConstructor
 public class AdminController {
     final VendorService vendorService;
@@ -53,6 +59,7 @@ public class AdminController {
     final CategoryService categoryService;
     final SubSubCategoryService  subSubCategoryService;
     private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model,HttpServletRequest request) {
@@ -72,7 +79,7 @@ public class AdminController {
         LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);
         model.addAttribute("stats", stats);
         model.addAttribute("recentLogs", logs);
-        List<Long> growth = vendorRepository.countNewVendorsLast7Days(weekAgo); // your custom query
+        List<Long> growth = vendorRepository.countNewVendorsLast7Days(weekAgo);
         model.addAttribute("vendorGrowth", growth);
         model.addAttribute("roleStats", new RoleStats(
                 userRepository.countUsersByRoleCustomer(Role.CUSTOMER),
@@ -82,6 +89,47 @@ public class AdminController {
                 GlobalControllerAdvice.populateCurrentPage(request));
         return "admin/admin_dashboard";
     }
+
+    @GetMapping("/orders")
+    public String orders(@RequestParam(required = false) String search,
+                         @RequestParam(required = false) String status,
+                         @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateFrom,
+                         @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateTo,
+                         @PageableDefault(size = 20, sort = {"createdAt", "desc"}) Pageable pageable,
+                         Model model,HttpServletRequest request) {
+        LocalDateTime fromDateTime = dateFrom != null ?
+                dateFrom.atStartOfDay() : null;
+        LocalDateTime toDateTime = dateTo != null ?
+                dateTo.atTime(23, 59, 59) : null;
+        List<Order> all = orderRepository.findAll(fromDateTime, toDateTime);
+        long count = all.stream().filter(order -> order.getStatus().equals(OrderStatus.PENDING)).count();
+        double sum = all.stream().mapToDouble(Order::getTotalPrice).sum();
+        model.addAttribute("totalRevenue", sum);
+        model.addAttribute("pendingCount", count);
+        model.addAttribute("searchQuery", search);
+        model.addAttribute("statusFilter", status);
+        model.addAttribute("dateFrom", dateFrom);
+        model.addAttribute("dateTo", dateTo);
+        model.addAttribute("orders", all);
+        model.addAttribute("currentWebPage", GlobalControllerAdvice.populateCurrentPage(request));
+        return "admin/orders";
+    }
+
+
+    @PostMapping("/orders/{orderId}/taken")
+    @ResponseBody
+    public Map<String, Object> markAsTaken(@PathVariable Long orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow();
+        if (order.getStatus() == OrderStatus.READY_FOR_PICKUP || order.getStatus() == OrderStatus.UNPAID) {
+
+            order.setStatus(OrderStatus.TAKEN_BY_CUSTOMER);
+            orderRepository.save(order);
+
+            return Map.of("success", true);
+        }
+        return Map.of("Fail",false);
+    }
+
 
     @GetMapping("/vendor_accept")
     public String vendorAccept(Model model,HttpServletRequest request) {

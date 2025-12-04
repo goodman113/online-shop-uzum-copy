@@ -15,7 +15,6 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.PENDING;

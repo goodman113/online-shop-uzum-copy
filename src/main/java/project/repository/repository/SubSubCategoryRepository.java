@@ -25,4 +25,6 @@ public interface SubSubCategoryRepository extends JpaRepository<SubSubCategory,L
     List<SubSubCategory> findAllBySubCategory_IdAndDeleted(Long subCategoryId, Boolean deleted);
 
     Optional<SubSubCategory> findSubSubCategoryByIdIsAndDeleted(Long id, boolean b);
+
+    List<SubSubCategory> findAllBySubCategoryName(String subCategoryName);
 }

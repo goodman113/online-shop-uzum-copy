@@ -18,3 +18,15 @@ spring:
       port: 6379
       timeout: 60000
       host: localhost
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: boronking03@gmail.com
+    password: sfyn ziqo irrh aaua
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true

@@ -35,6 +35,7 @@ public class ProductMapper {
     final ReviewMapper  reviewMapper;
     final ImageRepository imageRepository;
     final UserRepository userRepository;
+    final ReviewRepository reviewRepository;
     public Product fromCreateDto(ProductCreateDto dto) {
         Product product = new Product();
         product.setName(dto.getName());
@@ -65,7 +66,7 @@ public class ProductMapper {
         productDto.setVendorId(save.getVendor().getId());
         productDto.setSoldQuantity(save.getSoldQuantity());
         productDto.setImageProducts(imageRepository.findImagesByProduct_Id(save.getId()));
-        productDto.setReviews(reviewMapper.toDtoList(reviewService.getAllReviewForProduct(save)));
+        productDto.setReviews(reviewMapper.toDtoList(reviewRepository.findReviewsByProduct(save)));
         return productDto;
     }
 

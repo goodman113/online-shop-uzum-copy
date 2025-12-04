@@ -1,5 +1,6 @@
 package project.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.context.annotation.Lazy;
@@ -12,7 +13,6 @@ import java.util.List;
 @Table(name = "product")
 @Setter
 @Getter
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class Product extends BaseEntity {
@@ -43,10 +43,12 @@ public class Product extends BaseEntity {
     @Column(name = "old_price")
     private Double oldPrice;
 
-    @Column(name = "average_rating")// for crossed price
+    @Column(name = "average_rating")
     private Double averageRating;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<Image> imageProducts = new ArrayList<>();
     // Getters and Setters
 }

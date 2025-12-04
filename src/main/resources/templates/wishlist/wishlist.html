@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist - Ali Market</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9fafb; }
+
+        /* Header */
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 15px 40px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 28px; font-weight: 800; color: #7c3aed; letter-spacing: -1px; text-decoration: none; }
+        .logo span { color: #a78bfa; }
+
+        /* Center Nav */
+        .center-nav { display: flex; align-items: center; gap: 20px; flex: 1; justify-content: center; max-width: 600px; }
+        .categories-btn { background: #7c3aed; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.3s; }
+        .categories-btn:hover { background: #6d28d9; transform: translateY(-2px); }
+
+        /* Search */
+        .search-container { display: flex; flex: 1; max-width: 600px; }
+        .search-container form { display: flex; width: 100%; }
+        .search-container input { flex: 1; padding: 12px 20px; border: 2px solid #e5e7eb; border-right: none; border-radius: 8px 0 0 8px; font-size: 14px; outline: none; transition: border-color 0.3s; }
+        .search-container input:focus { border-color: #7c3aed; }
+        .search-btn { background: #7c3aed; border: none; padding: 12px 20px; border-radius: 0 8px 8px 0; cursor: pointer; color: #fff; transition: background 0.3s; }
+        .search-btn:hover { background: #6d28d9; }
+
+        /* Right Nav */
+        .right-nav { display: flex; align-items: center; gap: 25px; }
+        .nav-icon { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #374151; cursor: pointer; transition: color 0.3s; text-decoration: none; }
+        .nav-icon:hover { color: #7c3aed; }
+        .nav-icon i { font-size: 22px; }
+        .nav-icon span { font-size: 11px; font-weight: 500; }
+        .cart-badge { position: relative; }
+        .cart-badge::after { content: attr(data-count); position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 50%; }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 998; opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        /* Sidebar */
+        .sidebar { position: fixed; top: 0; left: -400px; width: 350px; height: 100%; background: #fff; box-shadow: 2px 0 20px rgba(0,0,0,0.1); z-index: 999; transition: left 0.3s; overflow-y: auto; }
+        .sidebar.active { left: 0; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 2px solid #f3f4f6; }
+        .sidebar-header h3 { font-size: 20px; font-weight: 700; color: #1f2937; }
+        .close-sidebar { background: none; border: none; font-size: 24px; color: #6b7280; cursor: pointer; transition: color 0.3s; }
+        .close-sidebar:hover { color: #1f2937; }
+
+        /* Categories */
+        .categories-list { padding: 15px 0; }
+        .category-item { border-bottom: 1px solid #f3f4f6; }
+        .category-link { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; transition: background 0.2s; font-weight: 600; color: #374151; }
+        .category-link:hover { background: #f9fafb; }
+        .category-link.active { background: #f3f4f6; color: #7c3aed; }
+        .category-link i { transition: transform 0.3s; }
+        .category-link.active i { transform: rotate(90deg); }
+
+        /* Subcategory Menu */
+        .subcategory-menu { max-height: 0; overflow: hidden; background: #fafafa; transition: max-height 0.3s; }
+        .subcategory-menu.active { max-height: 1000px; }
+        .subcategory-menu-header { padding: 12px 20px; font-size: 13px; font-weight: 700; color: #7c3aed; text-transform: uppercase; }
+        .subcategory-item { border-top: 1px solid #f0f0f0; }
+        .subcategory-link { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px 12px 35px; cursor: pointer; transition: background 0.2s; color: #4b5563; }
+        .subcategory-link:hover { background: #f3f4f6; }
+        .subcategory-link.active { background: #ede9fe; color: #7c3aed; }
+
+        /* Sub-subcategory Menu */
+        .subsubcategory-menu { max-height: 0; overflow: hidden; background: #f5f5f5; transition: max-height 0.3s; }
+        .subsubcategory-menu.active { max-height: 800px; }
+        .subsubcategory-menu-header { padding: 10px 20px 10px 50px; font-size: 12px; font-weight: 600; color: #6b7280; }
+        .subsubcategory-link { display: block; padding: 10px 20px 10px 50px; color: #6b7280; text-decoration: none; transition: all 0.2s; font-size: 14px; }
+        .subsubcategory-link:hover { background: #ede9fe; color: #7c3aed; padding-left: 55px; }
+
+        /* Products Section */
+        .products-section { padding: 30px 40px; min-height: 60vh; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .section-title { font-size: 24px; font-weight: 700; color: #1f2937; }
+        .wishlist-count { font-size: 16px; color: #6b7280; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
+
+        /* Product Card */
+        .product-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: all 0.3s; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
+        .product-image { position: relative; height: 220px; overflow: hidden; cursor: pointer; }
+        .product-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .product-card:hover .product-image img { transform: scale(1.05); }
+        .wishlist-btn { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; background: #fff; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.3s; }
+        .wishlist-btn i { font-size: 18px; color: #ef4444; transition: color 0.3s; }
+        .wishlist-btn:hover { transform: scale(1.1); }
+        .old-price-badge { position: absolute; top: 12px; left: 12px; background: #ef4444; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+        /* Product Info */
+        .product-info { padding: 18px; }
+        .product-name { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-rating { display: flex; align-items: center; gap: 5px; margin-bottom: 10px; }
+        .stars { color: #fbbf24; font-size: 14px; }
+        .rating-value { color: #6b7280; font-size: 13px; }
+        .product-price { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .current-price { font-size: 20px; font-weight: 700; color: #7c3aed; }
+        .old-price { font-size: 14px; color: #9ca3af; text-decoration: line-through; }
+
+        /* Action Buttons */
+        .action-buttons { display: flex; gap: 10px; }
+        .buy-btn { flex: 1; padding: 12px; background: #7c3aed; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .buy-btn:hover { background: #6d28d9; }
+        .remove-btn { padding: 12px 16px; background: #fee2e2; color: #ef4444; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .remove-btn:hover { background: #fecaca; }
+
+        /* Empty State */
+        .empty-wishlist { text-align: center; padding: 80px 20px; }
+        .empty-wishlist i { font-size: 80px; color: #d1d5db; margin-bottom: 20px; }
+        .empty-wishlist h2 { font-size: 24px; color: #374151; margin-bottom: 10px; }
+        .empty-wishlist p { font-size: 16px; color: #6b7280; margin-bottom: 30px; }
+        .browse-btn { padding: 14px 32px; background: #7c3aed; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.3s; }
+        .browse-btn:hover { background: #6d28d9; transform: translateY(-2px); }
+
+        /* Loading State */
+        .loading { text-align: center; padding: 60px 20px; color: #6b7280; }
+        .loading i { font-size: 40px; margin-bottom: 15px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Toast Notification */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: #1f2937; color: #fff; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); display: none; align-items: center; gap: 12px; z-index: 1000; animation: slideIn 0.3s ease; }
+        .toast.show { display: flex; }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Hidden class */
+        .hidden { display: none !important; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header { padding: 12px 20px; flex-wrap: wrap; }
+            .center-nav { order: 3; width: 100%; margin-top: 15px; }
+            .products-section { padding: 20px; }
+            .products-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+            .product-image { height: 180px; }
+            .sidebar { width: 300px; left: -300px; }
+        }
+
+
+        .wishlist-badge { position: relative; }
+        .wishlist-badge::after {
+            content: attr(data-count);
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #7c3aed;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .quantity-controls {
+            display: none;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .quantity-controls.show { display: flex; }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #d1d5db;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .qty-btn:hover { background: #f3f4f6; }
+        .qty-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .qty-value {
+            min-width: 24px;
+            text-align: center;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .buy-btn.in-cart {
+            background: #10b981;
+        }
+        .buy-btn.in-cart:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+    <a href="/" class="logo">Ali <span>Market</span></a>
+    <div class="center-nav">
+        <button class="categories-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i> Categories
+        </button>
+        <div class="search-container">
+            <form method="get" action="/">
+                <input type="text" name="name" placeholder="Search products..." id="searchInput" th:value="${param.name}">
+                <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
+    </div>
+    <div class="right-nav">
+        <a href="/login" class="nav-icon">
+            <i class="fas fa-user"></i>
+            <span>Login</span>
+        </a>
+        <a href="/orders?filter=all" class="nav-icon">
+            <i class="fas fa-box"></i>
+            <span>Orders</span>
+        </a>
+        <!-- ✅ WISHLIST BADGE ADDED -->
+        <a href="/wishlist" class="nav-icon wishlist-badge" th:attr="data-count=${#lists.size(products)}" id="wishlistBadge">
+            <i class="fas fa-heart"></i>
+            <span>Wishlist</span>
+        </a>
+        <a href="/cart" class="nav-icon cart-badge" data-count="0" id="cartBadge">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Cart</span>
+        </a>
+    </div>
+</header>
+
+<!-- ... YOUR SIDEBAR CODE (KEEP SAME) ... -->
+
+<!-- Products Section -->
+<section class="products-section">
+    <div class="section-header">
+        <h1 class="section-title">My Wishlist</h1>
+        <span class="wishlist-count" th:text="${#lists.size(products) > 0} ? ${#lists.size(products)} + ' item(s)' : '0 items'">
+            0 items
+        </span>
+    </div>
+
+    <div class="products-grid" th:if="${products != null && !#lists.isEmpty(products)}">
+        <div class="product-card" th:each="product : ${products}" th:data-product-id="${product.id}">
+            <!-- Product Image -->
+            <div class="product-image" th:onclick="'|window.location.href=\'/product/${product.id}\'|'">
+                <img th:src="${product.imageProducts != null && !#lists.isEmpty(product.imageProducts)} ? ${product.imageProducts[0].path} : '/images/placeholder.jpg'"
+                     th:alt="${product.name}"
+                     onerror="this.src='/images/placeholder.jpg'"/>
+
+                <!-- ✅ HEART BUTTON → DELETE REQUEST -->
+                <button class="wishlist-btn"
+                        th:onclick="'event.stopPropagation(); removeFromWishlist(' + ${product.id} + ', this)'"
+                        title="Remove from wishlist">
+                    <i class="fas fa-heart"></i>
+                </button>
+
+                <div class="old-price-badge"
+                     th:if="${product.oldPrice != null && product.oldPrice > product.price}"
+                     th:text="${#numbers.formatDecimal(((product.oldPrice - product.price) / product.oldPrice * 100), 0, 0)} + '%'">
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+                <h3 class="product-name" th:title="${product.name}" th:text="${product.name}">Product Name</h3>
+
+                <div class="product-rating">
+                    <div class="stars">
+                        <th:block th:each="i : ${#numbers.sequence(0, 4)}">
+                            <i th:class="${product.averageRating != null} ?
+                  (i + 1 <= product.averageRating ? 'fas fa-star' :
+                  (i + 0.5 <= product.averageRating ? 'fas fa-star-half-alt' : 'far fa-star')) :
+                  'far fa-star'"
+                               style="color: #fbbf24;"></i>
+                        </th:block>
+
+                    </div>
+                    <span class="rating-value"
+                          th:text="${product.averageRating != null} ? ${#numbers.formatDecimal(product.averageRating, 1, 1)} : 'No reviews'">
+                    </span>
+                </div>
+
+                <div class="product-price">
+                    <span class="current-price" th:text="${#numbers.formatDecimal(product.price, 0, 2)} + ' sum'">299900.00 sum</span>
+                    <span class="old-price" th:if="${product.oldPrice != null}"
+                          th:text="${#numbers.formatDecimal(product.oldPrice, 0, 2)} + ' sum'">359900.00 sum</span>
+                </div>
+
+                <!-- ✅ ADD TO CART + QUANTITY CONTROLS -->
+                <div class="action-buttons">
+                    <!-- Buy Button (shows initially) -->
+                    <button class="buy-btn"
+                            th:data-product-id="${product.id}"
+                            onclick="addToCart(this)">
+                        <i class="fas fa-shopping-cart"></i> Add to Cart
+                    </button>
+
+                    <!-- Quantity Controls (hidden initially) -->
+                    <div class="quantity-controls" th:data-product-id="${product.id}">
+                        <button class="qty-btn" onclick="decreaseQty(this)">−</button>
+                        <span class="qty-value">1</span>
+                        <button class="qty-btn" onclick="increaseQty(this)">+</button>
+                    </div>
+                </div>
+
+                <!-- ✅ REMOVE BUTTON (separate from heart) -->
+                <button class="remove-btn"
+                        th:onclick="'removeFromWishlist(' + ${product.id} + ', this)'"
+                        title="Remove from wishlist"
+                        style="width: 100%; margin-top: 10px;">
+                    <i class="fas fa-trash"></i> Remove from Wishlist
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-wishlist" th:if="${products == null || #lists.isEmpty(products)}">
+        <i class="fas fa-heart-broken"></i>
+        <h2>Your wishlist is empty</h2>
+        <p>Save items you love so you can easily find them later</p>
+        <a href="/" class="browse-btn">Browse Products</a>
+    </div>
+</section>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage">Success!</span>
+</div>
+<script>
+    // Global cart data
+    let cartData = {};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartBadge();
+        updateWishlistBadge();
+    });
+
+    // ✅ ADD TO CART → SHOW QUANTITY CONTROLS
+    async function addToCart(button) {
+        const productId = button.dataset.productId;
+        const controls = button.closest('.action-buttons').querySelector('.quantity-controls');
+        const buyBtn = button;
+
+        try {
+            buyBtn.disabled = true;
+            buyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+
+            const response = await fetch(`/api/cart/add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: productId, quantity: 1 })
+            });
+
+            const data = await response.json();
+
+            if (data.success || response.ok) {
+                // Hide buy button, show quantity controls
+                buyBtn.style.display = 'none';
+                controls.classList.add('show');
+                controls.querySelector('.qty-value').textContent = '1';
+                cartData[productId] = 1;
+
+                buyBtn.classList.add('in-cart');
+                showToast('Added to cart! ✅', 'success');
+                updateCartBadge();
+            } else {
+                showToast(data.message || 'Failed to add to cart', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Network error', 'error');
+        } finally {
+            buyBtn.disabled = false;
+            buyBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
+        }
+    }
+
+    // ✅ INCREASE QUANTITY
+    function increaseQty(btn) {
+        const controls = btn.closest('.quantity-controls');
+        const productId = controls.dataset.productId;
+        const qtySpan = controls.querySelector('.qty-value');
+        let qty = parseInt(qtySpan.textContent) + 1;
+
+        fetch(`/api/cart/update/${productId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quantity: qty })
+        })
+            .then(res => res.json())
+            .then(data => {
+                cartData[productId] = qty;
+                qtySpan.textContent = qty;
+                updateCartBadge();
+            })
+            .catch(err => console.error('Error updating cart:', err));
+    }
+
+    // ✅ DECREASE QUANTITY
+    function decreaseQty(btn) {
+        const controls = btn.closest('.quantity-controls');
+        const productId = controls.dataset.productId;
+        const qtySpan = controls.querySelector('.qty-value');
+        let qty = parseInt(qtySpan.textContent) - 1;
+
+        if (qty <= 0) {
+            fetch(`/api/cart/remove/${productId}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    delete cartData[productId];
+                    const card = controls.closest('.product-card');
+                    const buyBtn = card.querySelector('.buy-btn');
+
+                    // ✅ HIDE QUANTITY → SHOW ADD TO CART
+                    controls.classList.remove('show');
+                    buyBtn.style.display = 'block';
+                    buyBtn.classList.remove('in-cart');
+
+                    updateCartBadge();
+                    showToast('Removed from cart', 'success');
+                })
+                .catch(err => console.error('Error removing from cart:', err));
+        } else {
+            fetch(`/api/cart/update/${productId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantity: qty })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    cartData[productId] = qty;
+                    qtySpan.textContent = qty;
+                    updateCartBadge();
+                })
+                .catch(err => console.error('Error updating cart:', err));
+        }
+    }
+
+    // ✅ REMOVE FROM WISHLIST (HEART + TRASH BUTTON)
+    async function removeFromWishlist(productId, button) {
+        try {
+            button.disabled = true;
+            button.style.opacity = '0.6';
+
+            const response = await fetch(`/api/wishlist/remove/${productId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const card = button.closest('.product-card');
+                card.style.transition = 'all 0.4s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95) translateY(-10px)';
+
+                setTimeout(() => {
+                    card.remove();
+                    updateWishlistCount();
+                }, 400);
+
+                showToast('Removed from wishlist!', 'success');
+            } else {
+                showToast(data.message || 'Failed to remove', 'error');
+                button.disabled = false;
+                button.style.opacity = '1';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Network error occurred', 'error');
+            button.disabled = false;
+            button.style.opacity = '1';
+        }
+    }
+
+    // Update wishlist badge & count
+    function updateWishlistCount() {
+        const remainingCards = document.querySelectorAll('.product-card').length;
+        const countEl = document.querySelector('.wishlist-count');
+        const badge = document.getElementById('wishlistBadge');
+
+        if (remainingCards === 0) {
+            window.location.reload(); // Show empty state
+        } else {
+            if (countEl) countEl.textContent = `${remainingCards} item${remainingCards === 1 ? '' : 's'}`;
+            if (badge) badge.setAttribute('data-count', remainingCards);
+        }
+    }
+
+    async function updateCartBadge() {
+        try {
+            const response = await fetch('/api/cart');
+            const data = await response.json();
+            if (data && data.items) {
+                const totalItems = data.items.reduce((sum, item) => sum + item.quantity, 0);
+                const badge = document.getElementById('cartBadge');
+                badge.setAttribute('data-count', totalItems);
+            }
+        } catch (error) {
+            console.error('Error updating cart badge:', error);
+        }
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        toast.className = `toast ${type}`;
+        toastMessage.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Keep your existing sidebar functions...
+    function toggleSidebar() {
+        document.querySelector('.sidebar').classList.toggle('active');
+        document.querySelector('.sidebar-overlay').classList.toggle('active');
+    }
+
+    function toggleCategory(el) {
+        document.querySelectorAll('.category-link').forEach(link => link.classList.remove('active'));
+        document.querySelectorAll('.subcategory-menu').forEach(menu => menu.classList.remove('active'));
+        document.querySelectorAll('.subsubcategory-menu').forEach(menu => menu.classList.remove('active'));
+        document.querySelectorAll('.subcategory-link').forEach(link => link.classList.remove('active'));
+
+        el.classList.add('active');
+        const index = el.dataset.index;
+        document.getElementById('subcategory-menu-' + index).classList.add('active');
+    }
+
+    function toggleSubCategory(el) {
+        document.querySelectorAll('.subcategory-link').forEach(link => link.classList.remove('active'));
+        document.querySelectorAll('.subsubcategory-menu').forEach(menu => menu.classList.remove('active'));
+
+        el.classList.add('active');
+        const catIndex = el.dataset.catIndex;
+        const index = el.dataset.index;
+        document.getElementById('subsubcategory-menu-' + catIndex + '-' + index).classList.add('active');
+    }
+
+</script>
+
+</body>
+</html>

@@ -15,22 +15,14 @@ import project.model.enums.OrderItemStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderItem extends BaseEntity {
-
-
     private int quantity;
-
     private Double price;
-
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
-
     @ManyToOne
     @JoinColumn(name = "order_id")
     private Order order;
-
     @Enumerated(EnumType.STRING)
     private OrderItemStatus status;
-
-    // Getters and Setters
 }

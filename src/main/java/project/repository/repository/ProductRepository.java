@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import project.model.Product;
+import project.model.SubSubCategory;
 import project.model.Vendor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -57,4 +58,6 @@ WHERE (:name IS NULL OR p.name ILIKE CONCAT('%', :name, '%'))
     void deleteById(Long id);
 
     Optional<Product> findProductByIdIsAndDeleted(Long id, boolean b);
+
+    List<Product> findProductsByCategory(SubSubCategory category);
 }

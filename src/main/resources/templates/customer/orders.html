@@ -3,181 +3,784 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title>User Orders</title>
     <style>
+        /* 🔥 CORE RESET & BASE */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        /* 🔥 HEADER */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 40px;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #7c3aed;
+            letter-spacing: -1px;
+        }
+        .logo span { color: #a78bfa; }
+
+        .center-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+            justify-content: center;
+            max-width: 600px;
+        }
+        .categories-btn {
+            background: #7c3aed;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .categories-btn:hover { background: #6d28d9; transform: translateY(-2px); }
+
+        .search-container {
+            display: flex;
+            flex: 1;
+            max-width: 600px;
+        }
+        .search-container input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .search-container input:focus { border-color: #7c3aed; }
+        .search-btn {
+            background: #7c3aed;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            color: #fff;
+            transition: background 0.3s;
+        }
+        .search-btn:hover { background: #6d28d9; }
+
+        .right-nav {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        .nav-icon {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #374151;
+            cursor: pointer;
+            transition: color 0.3s;
+            text-decoration: none;
+        }
+        .nav-icon:hover { color: #7c3aed; }
+        .nav-icon i { font-size: 22px; }
+        .nav-icon span { font-size: 11px; font-weight: 500; }
+
+        .cart-badge::after, .wishlist-badge::after {
+            content: attr(data-count);
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            padding: 0 4px;
+            z-index: 10;
+        }
+        .wishlist-badge::after { background: #7c3aed; }
+        .cart-badge[data-count="0"]::after, .wishlist-badge[data-count="0"]::after { display: none; }
+
+        /* 🔥 CATEGORIES SIDEBAR */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 200;
+        }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        /* 🔥 CATEGORIES SIDEBAR (Mobile/Overlay) */
+        .sidebar.categories-sidebar {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 320px;
+            height: 100%;
+            background: #fff;
+            transition: left 0.3s;
+            z-index: 201;
+            overflow-y: auto;
+        }
+        .sidebar.categories-sidebar.active { left: 0; }
+
+        /* 🔥 USER NAV SIDEBAR (Desktop/Fixed) */
+        .sidebar.user-nav-sidebar {
+            position: relative !important;  /* Override fixed positioning */
+            left: 0 !important;           /* Always visible */
+            width: 400px;
+            background: #fff;
+            padding: 40px 0;
+            border-right: 1px solid #e5e7eb;
+            z-index: 1;                   /* Low z-index, always behind */
+        }
+
+        /* 🔥 RESPONSIVE: Mobile User Sidebar */
+        @media (max-width: 768px) {
+            .sidebar.user-nav-sidebar {
+                position: relative !important;
+                width: 100% !important;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            .sidebar.categories-sidebar {
+                left: -100%;
+                width: 100%;
+            }
+            .sidebar.categories-sidebar.active {
+                left: 0;
+            }
+        }
+        .sidebar.active { left: 0; }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #7c3aed;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sidebar-header h3 { font-size: 18px; }
+        .close-sidebar {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* 🔥 CATEGORY STYLES */
+        .category-item, .subcategory-item { border-bottom: 1px solid #f3f4f6; }
+        .category-link, .subcategory-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .category-link:hover, .subcategory-link:hover {
+            background: #f9fafb;
+            color: #7c3aed;
+        }
+        .category-link.active, .subcategory-link.active {
+            background: #7c3aed;
+            color: #fff;
+        }
+
+        .subcategory-menu {
+            position: fixed;
+            left: 320px;
+            top: 0;
+            width: 280px;
+            height: 100%;
+            background: #fff;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+            display: none;
+            overflow-y: auto;
+            z-index: 202;
+        }
+        .subcategory-menu.active { display: block; }
+
+        .subsubcategory-menu {
+            position: fixed;
+            left: 600px;
+            top: 0;
+            width: 250px;
+            height: 100%;
+            background: #fff;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+            display: none;
+            overflow-y: auto;
+            z-index: 203;
+        }
+        .subsubcategory-menu.active { display: block; }
+
+        .subcategory-menu-header, .subsubcategory-menu-header {
+            padding: 20px;
+            background: #f3f4f6;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .subsubcategory-link {
+            display: block;
+            padding: 12px 20px;
+            color: #374151;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .subsubcategory-link:hover {
+            background: #7c3aed;
+            color: #fff;
+        }
+
+        .clickable-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        .clickable-header:hover {
+            background: #7c3aed;
+            color: #fff;
+        }
+        .clickable-header i { font-size: 14px; opacity: 0.7; }
+
+        /* 🔥 MAIN LAYOUT */
+        .container { display: flex; min-height: 100vh; }
+        .sidebar.user-nav-sidebar {
+            width: 400px;
+            background: #fff;
+            padding: 40px 0;
+            border-right: 1px solid #e5e7eb;
+        }
+        .username {
+            font-size: 32px;
+            font-weight: 600;
+            padding: 0 40px 40px;
+            color: #1d1d1f;
+        }
+        .nav-menu { list-style: none; }
+        .nav-item {
+            padding: 16px 40px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 17px;
+        }
+        .nav-item:hover { background: #f5f5f7; }
+        .nav-item.active { background: #e8e8ed; }
+        .notification-dot {
+            width: 8px; height: 8px;
+            background: #7c3aed;
+            border-radius: 50%;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px 60px;
+            max-width: 1200px;
+        }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+
+        /* 🔥 FILTER TABS */
+        .filter-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+        .filter-tab {
+            padding: 10px 24px;
+            border-radius: 24px;
+            background: #e8e8ed;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: #1d1d1f;
+        }
+        .filter-tab:hover { background: #d2d2d7; }
+        .filter-tab.active { background: #1d1d1f; color: #fff; }
+
+        /* 🔥 ORDER CARDS */
+        .orders-list { display: flex; flex-direction: column; gap: 16px; }
+        .order-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            transition: box-shadow 0.2s;
+        }
+        .order-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .order-id { font-size: 17px; font-weight: 600; color: #1d1d1f; }
+        .copy-icon {
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .copy-icon:hover { background: #f5f5f7; }
+
+        .order-details { display: flex; flex-direction: column; gap: 12px; }
+        .detail-row {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+        .detail-label { color: #6e6e73; font-size: 15px; }
+        .detail-value {
+            color: #1d1d1f;
+            font-size: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            width: fit-content;
+        }
+        .status-active { background: #10b981; color: white; }
+        .status-unpaid { background: #f59e0b; color: white; }
+        .status-taken { background: #3b82f6; color: white; }
+        .status-returned { background: #ef4444; color: white; }
+        .update-time { color: #6e6e73; font-size: 13px; }
 
         .payment-section {
             margin-top: 16px;
             padding-top: 16px;
             border-top: 1px solid #e0e0e0;
         }
-
         .btn-pay {
             width: 100%;
             padding: 12px 24px;
-            background-color: #7000FF;
+            background: #7000FF;
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background 0.3s;
+        }
+        .btn-pay:hover { background: #5c00d6; }
+
+        .review-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(124,58,237,0.3);
+            margin-top: 12px;
+        }
+        .review-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124,58,237,0.4);
         }
 
-        .btn-pay:hover {
-            background-color: #5c00d6;
+        /* 🔥 ORDER ITEMS */
+        .order-items {
+            margin-top: 24px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 24px;
+        }
+        .items-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 12px 0;
+        }
+        .items-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        .dropdown-icon {
+            transition: transform 0.3s;
+            color: #6e6e73;
+            font-size: 18px;
+        }
+        .dropdown-icon.open { transform: rotate(180deg); }
+        .items-list { display: none; padding-top: 16px; }
+        .items-list.open { display: block; }
+        .item-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f7;
+            font-size: 15px;
+        }
+        .item-name { color: #1d1d1f; font-weight: 500; }
+        .item-quantity, .item-price { color: #6e6e73; }
+
+        /* 🔥 REVIEWS & PROFILE */
+        .review-card, .profile-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .review-header, .profile-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .review-product, .profile-label {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        .review-rating { color: #fbbf24; font-size: 16px; }
+        .review-date, .profile-value {
+            color: #6e6e73;
+            font-size: 14px;
+        }
+        .review-text { color: #1d1d1f; font-size: 15px; line-height: 1.5; }
+        .profile-row {
+            grid-template-columns: 150px 1fr;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #f5f5f7;
+        }
+        .profile-value {
+            color: #1d1d1f;
+            font-weight: 500;
+        }
+        .profile-row:last-child { border-bottom: none; }
+
+        /* 🔥 EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .empty-state h2 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+        }
+        .empty-state p {
+            font-size: 17px;
+            color: #6e6e73;
+            margin-bottom: 12px;
         }
 
-        /* Modal Styles */
-        .modal {
+        /* 🔥 MODALS - CONSOLIDATED */
+        .modal-overlay, .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s;
+            z-index: 10000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active, .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 32px;
+        .review-modal, .modal-content {
+            background: white;
             border-radius: 12px;
             width: 90%;
-            max-width: 450px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             animation: slideIn 0.3s;
         }
-
         @keyframes slideIn {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(-50px) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
         }
 
-        .close {
-            color: #aaa;
-            float: right;
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px 0;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #1d1d1f;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .modal-close, .close {
+            background: none;
+            border: none;
             font-size: 28px;
-            font-weight: bold;
+            color: #999;
             cursor: pointer;
-            line-height: 20px;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
-
-        .close:hover,
-        .close:focus {
+        .modal-close:hover, .close:hover {
+            background: #f5f5f7;
             color: #000;
         }
 
-        .modal-content h2 {
-            margin-top: 0;
+        .modal-body { padding: 0 24px 24px; }
+        .product-info {
+            display: flex;
+            gap: 16px;
+            padding: 20px 0;
+            border-bottom: 1px solid #e5e7eb;
             margin-bottom: 24px;
-            color: #333;
-            font-size: 24px;
+        }
+        .product-info img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
         }
 
+        /* 🔥 REVIEW FORM */
+        .rating-section, .comment-section, .image-section, .form-group, .advantages-section, .disadvantages-section {
+            margin-bottom: 24px;
+        }
+        .rating-section label, .comment-section label, .form-group label, .advantages-section label, .disadvantages-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1d1d1f;
+            font-size: 14px;
+        }
+        .star-rating { display: flex; gap: 4px; }
+        .star-rating i {
+            font-size: 24px;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .star-rating i.fas { color: #f59e0b; }
+        #ratingText {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 8px;
+            display: block;
+        }
+
+        .advantages-section {
+            border-left: 4px solid #10b981;
+            background: #f0fdf4;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        .disadvantages-section {
+            border-left: 4px solid #ef4444;
+            background: #fef2f2;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .advantages-section textarea, .disadvantages-section textarea, #reviewComment, .form-group input, .form-group textarea {
+            background: #fff;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-family: inherit;
+            font-size: 15px;
+            line-height: 1.6;
+            resize: vertical;
+            min-height: 80px;
+            width: 100%;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        .advantages-section textarea:focus, .disadvantages-section textarea:focus, #reviewComment:focus, .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+        }
+        .form-group input {
+            min-height: auto;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        .form-group input:focus { border-color: #7000FF; }
+
+        .char-count {
+            text-align: right;
+            margin-top: 6px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .char-count span { font-weight: 500; }
+
+        .image-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fafafa;
+        }
+        .image-upload-area:hover {
+            border-color: #7c3aed;
+            background: #f8faff;
+        }
+        .image-upload-area i { font-size: 32px; color: #6e6e73; margin-bottom: 12px; }
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .image-preview {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            padding: 20px 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .btn-cancel, .btn-submit {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-cancel { background: #f5f5f7; color: #1d1d1f; }
+        .btn-cancel:hover { background: #e5e7eb; }
+        .btn-submit {
+            background: #7c3aed;
+            color: white;
+        }
+        .btn-submit:hover:not(:disabled) { background: #6d28d9; }
+        .btn-submit:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* 🔥 PAYMENT SPECIFIC */
         .payment-info {
-            background-color: #f5f5f5;
+            background: #f5f5f5;
             padding: 16px;
             border-radius: 8px;
             margin-bottom: 24px;
         }
-
         .info-row {
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
         }
-
-        .info-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .info-label {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .info-value {
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            box-sizing: border-box;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #7000FF;
-        }
+        .info-label { color: #666; font-size: 14px; }
+        .info-value { color: #333; font-weight: 600; font-size: 14px; }
 
         .error-message {
-            display: block;
-            color: #d32f2f;
+            color: #ef4444;
             font-size: 12px;
             margin-top: 4px;
             min-height: 16px;
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background-color: #7000FF;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 8px;
-        }
-
-        .btn-submit:hover {
-            background-color: #5c00d6;
-        }
-
-        .btn-submit:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+            display: block;
         }
 
         .verification-message {
-            background-color: #e0f2fe;
+            background: #e0f2fe;
             color: #0369a1;
             padding: 12px;
             border-radius: 6px;
@@ -185,26 +788,17 @@
             margin-bottom: 20px;
             text-align: center;
         }
-
         .timer-container {
             text-align: center;
             margin: 16px 0;
         }
-
-        .timer-text {
-            color: #666;
-            font-size: 14px;
-        }
-
-        #timer {
-            font-weight: 600;
-            color: #7000FF;
-        }
+        .timer-text { color: #666; font-size: 14px; }
+        #timer { font-weight: 600; color: #7000FF; }
 
         .btn-resend {
             width: 100%;
             padding: 14px;
-            background-color: #fff;
+            background: #fff;
             color: #7000FF;
             border: 2px solid #7000FF;
             border-radius: 8px;
@@ -214,703 +808,97 @@
             transition: all 0.3s;
             margin-top: 12px;
         }
-
         .btn-resend:hover {
-            background-color: #7000FF;
+            background: #7000FF;
             color: white;
         }
-
         .btn-resend:disabled {
-            background-color: #f5f5f5;
+            background: #f5f5f5;
             color: #ccc;
             border-color: #ccc;
             cursor: not-allowed;
         }
-        /* Orders List */
-        .orders-list {
+
+        /* 🔥 TOAST */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(16,185,129,0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 10000;
             display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        /* Order Card */
-        .order-card {
-            background-color: #fff;
-            border: 1px solid #e5e5e7;
-            border-radius: 12px;
-            padding: 24px;
-            transition: box-shadow 0.2s;
-        }
-
-        .order-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        /* Order Header */
-        .order-header {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #e5e5e7;
-        }
-
-        .order-id {
-            font-size: 17px;
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-
-        .copy-icon {
-            cursor: pointer;
-            font-size: 18px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            transition: background-color 0.2s;
-        }
-
-        .copy-icon:hover {
-            background-color: #f5f5f7;
-        }
-
-        /* Order Details */
-        .order-details {
-            display: flex;
-            flex-direction: column;
             gap: 12px;
+            font-weight: 500;
         }
-
-        .detail-row {
-            display: grid;
-            grid-template-columns: 180px 1fr;
-            gap: 16px;
-            align-items: start;
+        .toast.error {
+            background: #ef4444;
+            box-shadow: 0 10px 30px rgba(239,68,68,0.3);
         }
+        .toast.show { transform: translateX(0); }
+        .toast i { font-size: 18px; }
 
-        .detail-label {
-            color: #6e6e73;
-            font-size: 15px;
-        }
-
-        .detail-value {
-            color: #1d1d1f;
-            font-size: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        /* Status Badge */
-        .status-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            width: fit-content;
-        }
-
-        .update-time {
-            color: #6e6e73;
-            font-size: 13px;
-        }
-
-        /* Responsive */
+        /* 🔥 RESPONSIVE */
         @media (max-width: 768px) {
-            .detail-row {
-                grid-template-columns: 1fr;
-                gap: 4px;
+            .header { padding: 15px 20px; }
+            .container { flex-direction: column; }
+            .sidebar.user-nav-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
             }
-
-            .order-card {
-                padding: 16px;
-            }
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f5f5f7;
-            color: #1d1d1f;
-        }
-
-        .container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Left Sidebar */
-        .sidebar {
-            width: 400px;
-            background-color: #fff;
-            padding: 40px 0;
-            border-right: 1px solid #e5e5e7;
-        }
-
-        .username {
-            font-size: 32px;
-            font-weight: 600;
-            padding: 0 40px 40px;
-            color: #1d1d1f;
-        }
-
-        .nav-menu {
-            list-style: none;
-        }
-
-        .nav-item {
-            padding: 16px 40px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 17px;
-        }
-
-        .nav-item:hover {
-            background-color: #f5f5f7;
-        }
-
-        .nav-item.active {
-            background-color: #e8e8ed;
-        }
-
-        .notification-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #7c3aed;
-            border-radius: 50%;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            padding: 40px 60px;
-            max-width: 1200px;
-        }
-
-        .content-section {
-            display: none;
-        }
-
-        .content-section.active {
-            display: block;
-        }
-
-        /* Filter Tabs */
-        .filter-tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 40px;
-        }
-
-        .filter-tab {
-            padding: 10px 24px;
-            border-radius: 24px;
-            background-color: #e8e8ed;
-            border: none;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 500;
-            transition: all 0.2s;
-            color: #1d1d1f;
-        }
-
-        .filter-tab:hover {
-            background-color: #d2d2d7;
-        }
-
-        .filter-tab.active {
-            background-color: #1d1d1f;
-            color: #fff;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-        }
-
-        .empty-state h2 {
-            font-size: 48px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #1d1d1f;
-        }
-
-        .empty-state p {
-            font-size: 17px;
-            color: #6e6e73;
-            margin-bottom: 12px;
-        }
-
-        .payment-section {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .btn-pay {
-            width: 100%;
-            padding: 12px 24px;
-            background-color: #7000FF;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .btn-pay:hover {
-            background-color: #5c00d6;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 32px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 450px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            animation: slideIn 0.3s;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 20px;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: #000;
-        }
-
-        .modal-content h2 {
-            margin-top: 0;
-            margin-bottom: 24px;
-            color: #333;
-            font-size: 24px;
-        }
-
-        .payment-info {
-            background-color: #f5f5f5;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .info-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .info-label {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .info-value {
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            box-sizing: border-box;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #7000FF;
-        }
-
-        .error-message {
-            display: block;
-            color: #d32f2f;
-            font-size: 12px;
-            margin-top: 4px;
-            min-height: 16px;
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background-color: #7000FF;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 8px;
-        }
-
-        .btn-submit:hover {
-            background-color: #5c00d6;
-        }
-
-        .btn-submit:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 32px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 450px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            animation: slideIn 0.3s;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 20px;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: #000;
-        }
-
-        .modal-content h2 {
-            margin-top: 0;
-            margin-bottom: 24px;
-            color: #333;
-            font-size: 24px;
-        }
-
-        .payment-info {
-            background-color: #f5f5f5;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .info-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .info-label {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .info-value {
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            box-sizing: border-box;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #7000FF;
-        }
-
-        .error-message {
-            display: block;
-            color: #d32f2f;
-            font-size: 12px;
-            margin-top: 4px;
-            min-height: 16px;
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background-color: #7000FF;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 8px;
-        }
-
-        .btn-submit:hover {
-            background-color: #5c00d6;
-        }
-
-        .btn-submit:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-
-        .schedule-link {
-            color: #7c3aed;
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .schedule-link:hover {
-            text-decoration: underline;
-        }
-
-        .electronic-receipt {
-            display: flex;
+            .main-content { padding: 20px; }
+            .detail-row, .item-row, .profile-row { grid-template-columns: 1fr; gap: 4px; }
+            .center-nav { gap: 10px; }
+            .search-container { max-width: 300px; }
+            .sidebar.categories-sidebar { left: -100%; width: 100%; }
+            .subcategory-menu, .subsubcategory-menu { left: 0; width: 100%; }
+        }
+
+        .review-status {
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: #6e6e73;
-            font-size: 15px;
-            margin-top: 16px;
-        }
-
-        .checkbox-icon {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #d2d2d7;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-
-        .checkbox-icon.checked {
-            background-color: #7c3aed;
-            border-color: #7c3aed;
-            color: #fff;
-        }
-
-        /* Order Items Dropdown */
-        .order-items {
-            margin-top: 24px;
-            border-top: 1px solid #e5e5e7;
-            padding-top: 24px;
-        }
-
-        .items-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            padding: 12px 0;
-        }
-
-        .items-header h3 {
-            font-size: 15px;
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-
-        .dropdown-icon {
-            transition: transform 0.3s;
-            color: #6e6e73;
-        }
-
-        .dropdown-icon.open {
-            transform: rotate(180deg);
-        }
-
-        .items-list {
-            display: none;
-            padding-top: 16px;
-        }
-
-        .items-list.open {
-            display: block;
-        }
-
-        .item-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 16px;
-            padding: 12px 0;
-            border-bottom: 1px solid #f5f5f7;
-            font-size: 15px;
-        }
-
-        .item-row:last-child {
-            border-bottom: none;
-        }
-
-        .item-name {
-            color: #1d1d1f;
-            font-weight: 500;
-        }
-
-        .item-quantity,
-        .item-price {
-            color: #6e6e73;
-        }
-
-        .courier-note {
-            color: #7c3aed;
+            padding: 8px 16px;
+            border-radius: 8px;
             font-size: 14px;
-            margin-top: 8px;
-            font-style: italic;
-        }
-
-        /* Profile Section */
-        .profile-card {
-            background-color: #fff;
-            border: 1px solid #e5e5e7;
-            border-radius: 12px;
-            padding: 32px;
-        }
-
-        .profile-row {
-            display: grid;
-            grid-template-columns: 150px 1fr;
-            gap: 16px;
-            padding: 16px 0;
-            border-bottom: 1px solid #f5f5f7;
-        }
-
-        .profile-row:last-child {
-            border-bottom: none;
-        }
-
-        .profile-label {
-            color: #6e6e73;
-            font-size: 15px;
-        }
-
-        .profile-value {
-            color: #1d1d1f;
-            font-size: 15px;
             font-weight: 500;
         }
 
-        /* Reviews Section */
+        .review-status.reviewed {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .review-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .review-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
         .review-card {
-            background-color: #fff;
-            border: 1px solid #e5e5e7;
+            background: #fff;
+            border: 1px solid #e5e7eb;
             border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .review-header {
@@ -920,55 +908,165 @@
             margin-bottom: 12px;
         }
 
-        .review-product {
-            font-size: 17px;
-            font-weight: 600;
-            color: #1d1d1f;
+        .product-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .review-rating {
+        .product-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .review-pros-cons {
+            margin: 16px 0;
+        }
+
+        .review-pros, .review-cons {
+            margin-bottom: 12px;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .review-pros {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+
+        .review-cons {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+
+        .review-images {
+            display: flex;
+            gap: 10px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+
+        .review-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .seller-reply {
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .reply-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1e40af;
+        }
+
+        .review-rating i {
             color: #fbbf24;
             font-size: 16px;
         }
 
-        .review-date {
-            color: #6e6e73;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-
-        .review-text {
-            color: #1d1d1f;
-            font-size: 15px;
-            line-height: 1.5;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid #e5e5e7;
-            }
-
-            .main-content {
-                padding: 20px;
-            }
-
-            .detail-row {
-                grid-template-columns: 1fr;
-                gap: 4px;
-            }
+        .filter-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 12px;
         }
     </style>
 </head>
 <body>
+<!-- 🔥 HEADER -->
+<header class="header">
+    <div class="logo">Ali <span>Market</span></div>
+    <div class="center-nav">
+        <button class="categories-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i> Categories
+        </button>
+        <div class="search-container">
+            <form method="get" action="/" style="max-width: 600px; width: 100%;">
+                <input type="text" name="name" placeholder="Search products..." id="searchInput" th:value="${param.name}">
+                <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
+    </div>
+    <div class="right-nav">
+        <a href="/login" class="nav-icon">
+            <i class="fas fa-user"></i>
+            <span>Login</span>
+        </a>
+        <a href="/orders?filter=all" class="nav-icon">
+            <i class="fas fa-box"></i>
+            <span>Orders</span>
+        </a>
+        <a href="/wishlist" class="nav-icon wishlist-badge" th:attr="data-count=${wishlistCount}" id="wishlistBadge">
+            <i class="fas fa-heart"></i>
+            <span>Wishlist</span>
+        </a>
+        <a href="/cart" class="nav-icon cart-badge" data-count="0" id="cartBadge">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Cart</span>
+        </a>
+    </div>
+</header>
+
+<!-- 🔥 CATEGORIES SIDEBAR -->
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar categories-sidebar">
+    <div class="sidebar-header">
+        <h3>Categories</h3>
+        <button class="close-sidebar" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="categories-list">
+        <div class="category-item" th:each="entry, catStat : ${categories}">
+            <div class="category-link" th:data-index="${catStat.index}" th:data-name="${entry.key.name}" onclick="toggleCategory(this)">
+                <span th:text="${entry.key.name}">Electronics</span>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="subcategory-menu" th:id="'subcategory-menu-' + ${catStat.index}">
+                <div class="subcategory-menu-header clickable-header"
+                     th:data-name="${entry.key.name}"
+                     onclick="sendCategoryToBackend(this)">
+                    <span th:text="${entry.key.name}">Category Name</span>
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="subcategory-item" th:each="subCat, subStat : ${entry.value}">
+                    <div class="subcategory-link" th:data-cat-index="${catStat.index}" th:data-index="${subStat.index}" th:data-name="${subCat.name}" onclick="toggleSubCategory(this)">
+                        <span th:text="${subCat.name}">Phones</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    <div class="subsubcategory-menu" th:id="'subsubcategory-menu-' + ${catStat.index} + '-' + ${subStat.index}">
+                        <div class="subsubcategory-menu-header clickable-header"
+                             th:data-name="${subCat.name}"
+                             onclick="sendSubCategoryToBackend(this)">
+                            <span th:text="${subCat.name}">SubCategory Name</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <a th:each="subSubCat : ${subCat.subSubCategories}"
+                           th:href="@{/products(subSubCategoryId=${subSubCat.id})}"
+                           th:text="${subSubCat.name}" class="subsubcategory-link">Smartphones</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</aside>
+
 <div class="container">
-    <!-- Left Sidebar -->
-    <aside class="sidebar">
+    <!-- 🔥 USER SIDEBAR -->
+    <aside class="sidebar user-nav-sidebar">
         <h1 class="username" th:text="${user.username}">Muhammadali Yoqubjonov</h1>
         <ul class="nav-menu">
             <li class="nav-item active" onclick="showSection('orders')">
@@ -984,9 +1082,9 @@
         </ul>
     </aside>
 
-    <!-- Main Content -->
+    <!-- 🔥 MAIN CONTENT -->
     <main class="main-content">
-        <!-- Orders Section -->
+        <!-- 🔥 ORDERS -->
         <div id="orders" class="content-section active">
             <div class="filter-tabs">
                 <button class="filter-tab" onclick="filterOrders('all')" th:classappend="${filter == 'all'} ? 'active' : ''">Все заказы</button>
@@ -994,16 +1092,12 @@
                 <button class="filter-tab" onclick="filterOrders('active')" th:classappend="${filter == 'active'} ? 'active' : ''">Активные</button>
             </div>
 
-            <!-- Empty State -->
-            <div class="empty-state" th:if="${#lists.isEmpty(orders)}" style="display: none;">
+            <div class="empty-state" th:if="${#lists.isEmpty(orders)}">
                 <h2>Здесь пусто</h2>
                 <p>У вас отсутствуют активные заказы!</p>
                 <p>Воспользуйтесь поиском, чтобы найти всё что нужно.</p>
-                <button class="btn-primary">Начать покупки</button>
-                <a href="#" class="btn-link">Вернуться на главную</a>
             </div>
 
-            <!-- Orders List -->
             <div class="orders-list">
                 <div class="order-card" th:each="order : ${orders}">
                     <div class="order-header">
@@ -1015,55 +1109,32 @@
                         <div class="detail-row">
                             <span class="detail-label">Статус:</span>
                             <div class="detail-value">
-                        <span class="status-badge"
-                              th:classappend="${order.status == 'CANCELLED'} ? 'status-returned' :
-                                             (${order.status == 'UNPAID'} ? 'status-unpaid' : 'status-active')"
-                              th:text="${order.status}">Возвращён</span>
-                                <span class="update-time" th:text="'Обновлен ' + ${order.updatedAt}">Обновлен 2025-05-05 09:53</span>
+            <span class="status-badge"
+                  th:classappend="${order.status.name() == 'CANCELLED'} ? 'status-returned' :
+                                 (${order.status.name() == 'UNPAID'} ? 'status-unpaid' :
+                                 (${order.status.name() == 'TAKEN_BY_CUSTOMER'} ? 'status-taken' : 'status-active'))"
+                  th:text="${order.status}">Возвращён</span>
+                                <span class="update-time" th:text="'Обновлен ' +${#temporals.format(order.updatedAt, 'yyyy/MM/dd HH:mm:ss')}">2025/05/05 09:53:00</span>
                             </div>
                         </div>
-
-                        <div class="detail-row">
-                            <span class="detail-label">Срок хранения:</span>
-                            <span class="detail-value" th:text="${#temporals.format(order.updatedAt.plusDays(2), 'dd MMMM')}">до 4 мая</span>
-                        </div>
-
-                        <div class="detail-row">
-                            <span class="detail-label">Пункт выдачи:</span>
-                            <span class="detail-value" th:text="${order.address}">г. Ташкент, Юнусабадский район, проспект Амира Темура, дом 70</span>
-                        </div>
-
-                        <div class="detail-row" style="display: none;">
-                            <span class="detail-label"></span>
-                            <a href="#" class="schedule-link">График работы ⌄</a>
-                        </div>
-
                         <div class="detail-row">
                             <span class="detail-label">Дата заказа:</span>
-                            <span class="detail-value" th:text="${order.createdAt}">понедельник, 28 апреля 2025 22:24</span>
+                            <span class="detail-value" th:text="${#temporals.format(order.createdAt, 'yyyy/MM/dd HH:mm:ss')}">2025/04/28 22:24:00</span>
                         </div>
-
                         <div class="detail-row">
                             <span class="detail-label">Сумма заказа:</span>
-                            <span class="detail-value" th:text="${order.totalPrice}">24 000 сум</span>
-                        </div>
-
-                        <div class="electronic-receipt">
-                            <div class="checkbox-icon checked">✓</div>
-                            <span>Электронный чек</span>
-                        </div>
-
-                        <!-- Pay Button for Unpaid Orders with Card Payment Method -->
-                        <div th:if="${order.status == 'UNPAID' and order.payingMethod == T(uz.pdp.clickup.enums.PayingMethod).CARD}" class="payment-section">
-                            <button class="btn-pay"
-                                    th:attr="data-order-id=${order.id}, data-amount=${order.totalPrice}"
-                                    onclick="openPaymentModal(this)">
-                                Оплатить заказ
-                            </button>
+                            <span class="detail-value" th:text="${order.totalPrice} + ' сум'">24 000 сум</span>
                         </div>
                     </div>
 
-                    <!-- Order Items Dropdown -->
+                    <div th:if="${order.status == T(project.model.enums.OrderStatus).UNPAID and order.payingMethod == T(project.model.enums.PayingMethod).CARD}" class="payment-section">
+                        <button class="btn-pay"
+                                th:attr="data-order-id=${order.id}, data-amount=${order.totalPrice}"
+                                onclick="openPaymentModal(this)">
+                            Оплатить заказ
+                        </button>
+                    </div>
+
                     <div class="order-items">
                         <div class="items-header" onclick="toggleItems(this)">
                             <h3><span th:text="${#lists.size(order.items)}">1</span> товар</h3>
@@ -1071,12 +1142,36 @@
                         </div>
                         <div class="items-list">
                             <div class="item-row" th:each="item : ${order.items}">
+                                <!-- ✅ Product details (ALWAYS SHOW) -->
                                 <span class="item-name" th:text="${item.product.name}">Product Name</span>
                                 <span class="item-quantity" th:text="${item.quantity} + ' шт.'">1 шт.</span>
                                 <span class="item-price" th:text="${item.price} + ' сум'">24 000 сум</span>
-                            </div>
-                            <div class="courier-note" th:if="${order.withСourier}">
-                                🚚 Доставка курьером
+                                <!-- ✅ CHECK IF USER ALREADY REVIEWED THIS PRODUCT -->
+                                <th:block th:each="product : ${productsUserReviewed}">
+                                    <th:block th:if="${product.id == item.product.id}">
+                                        <!-- ❌ ALREADY REVIEWED -->
+                                        <div class="review-status reviewed">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span>Вы уже оставили отзыв</span>
+                                        </div>
+                                    </th:block>
+                                </th:block>
+
+                                <!-- ✅ SHOW REVIEW BUTTON ONLY IF NOT REVIEWED + TAKEN_BY_CUSTOMER -->
+                                <th:block th:if="${order.status.name() == 'TAKEN_BY_CUSTOMER'}">
+                                    <th:block th:each="product : ${productsUserReviewed}">
+                                        <th:block th:if="${product.id != item.product.id}">
+                                            <button class="review-btn"
+                                                    th:attr="data-product-id=${item.product.id},
+                                     data-product-name=${item.product.name},
+                                     data-product-image=${item.product.imageProducts != null && !item.product.imageProducts.isEmpty() ? item.product.imageProducts[0].path : '/images/placeholder.jpg'},
+                                     data-order-id=${order.id}"
+                                                    onclick="openReviewModal(this)">
+                                                <i class="fas fa-star"></i> Оставить отзыв
+                                            </button>
+                                        </th:block>
+                                    </th:block>
+                                </th:block>
                             </div>
                         </div>
                     </div>
@@ -1084,103 +1179,80 @@
             </div>
         </div>
 
-        <!-- Payment Modal -->
-        <div id="paymentModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closePaymentModal()">&times;</span>
-                <h2>Оплата заказа</h2>
-
-                <div class="payment-info">
-                    <div class="info-row">
-                        <span class="info-label">ID заказа:</span>
-                        <span class="info-value" id="modalOrderId">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Сумма:</span>
-                        <span class="info-value" id="modalAmount">-</span>
-                    </div>
-                </div>
-
-                <!-- Card Details Form -->
-                <form id="paymentForm" onsubmit="submitPayment(event)">
-                    <div class="form-group">
-                        <label for="cardNumber">Номер карты</label>
-                        <input type="text"
-                               id="cardNumber"
-                               name="cardNumber"
-                               placeholder="0000 0000 0000 0000"
-                               maxlength="19"
-                               required
-                               oninput="formatCardNumber(this)">
-                        <span class="error-message" id="cardError"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="expireDate">Срок действия</label>
-                        <input type="text"
-                               id="expireDate"
-                               name="expireDate"
-                               placeholder="MM/YY"
-                               maxlength="5"
-                               required
-                               oninput="formatExpireDate(this)">
-                        <span class="error-message" id="expireError"></span>
-                    </div>
-
-                    <button type="submit" class="btn-submit">Оплатить</button>
-                </form>
-
-                <!-- Verification Form (hidden initially) -->
-                <div id="verificationSection" style="display: none;">
-                    <p class="verification-message">На вашу карту отправлен код подтверждения</p>
-
-                    <div class="form-group">
-                        <label for="verificationCode">Код подтверждения</label>
-                        <input type="text"
-                               id="verificationCode"
-                               name="verificationCode"
-                               placeholder="000000"
-                               maxlength="6"
-                               required
-                               oninput="formatVerificationCode(this)">
-                        <span class="error-message" id="verifyError"></span>
-                    </div>
-
-                    <div class="timer-container">
-                        <span class="timer-text">Код действителен: <span id="timer">01:00</span></span>
-                    </div>
-
-                    <button id="verifyBtn" class="btn-submit" onclick="verifyCode()">Подтвердить</button>
-                    <button id="resendBtn" class="btn-resend" onclick="resendCode()" style="display: none;">Отправить код повторно</button>
-                </div>
-            </div>
-        </div>
-
-
-
-        <!-- Reviews Section -->
+        <!-- 🔥 REVIEWS -->
         <div id="reviews" class="content-section">
             <h2 style="font-size: 32px; font-weight: 600; margin-bottom: 24px;">Мои отзывы</h2>
 
-            <div class="review-card" th:each="review : ${reviews}">
-                <div class="review-header">
-                    <span class="review-product" th:text="${review.product.name}">Product Name</span>
-                    <span class="review-rating" th:text="${review.rating}">★★★★★</span>
-                </div>
-                <div class="review-date" th:text="${review.createdAt}">15 марта 2025</div>
-                <p class="review-text" th:text="${review.comment}">Great product! Highly recommend.</p>
+            <!-- 🔥 REVIEWS FILTERS -->
+            <div class="filter-tabs">
+                <button class="filter-tab" onclick="filterReviews('all')" th:classappend="${reviewFilter == 'all'} ? 'active' : ''">Все отзывы</button>
+                <button class="filter-tab" onclick="filterReviews('replied')" th:classappend="${reviewFilter == 'replied'} ? 'active' : ''">С ответом</button>
+                <button class="filter-tab" onclick="filterReviews('unreplied')" th:classappend="${reviewFilter == 'unreplied'} ? 'active' : ''">Без ответа</button>
             </div>
 
-            <div class="empty-state" th:if="${#lists.isEmpty(reviews)}">
+            <div class="review-card" th:each="review : ${filteredReviews}">
+                <div class="review-header">
+                    <div class="product-info">
+                        <img th:src="${review.product.imageProducts != null && !review.product.imageProducts.isEmpty() ? review.product.imageProducts[0].path : '/images/placeholder.jpg'}"
+                             alt="Product" class="product-image">
+                        <span class="review-product" th:text="${review.product.name}">Product Name</span>
+                    </div>
+                    <span class="review-rating">
+                <i class="fas" th:class="'fa-star' + (${review.rating >= 1} ? '' : '-o')"></i>
+                <i class="fas" th:class="'fa-star' + (${review.rating >= 2} ? '' : '-o')"></i>
+                <i class="fas" th:class="'fa-star' + (${review.rating >= 3} ? '' : '-o')"></i>
+                <i class="fas" th:class="'fa-star' + (${review.rating >= 4} ? '' : '-o')"></i>
+                <i class="fas" th:class="'fa-star' + (${review.rating >= 5} ? '' : '-o')"></i>
+                <span th:text="(${review.rating} > 0) ? review.rating + '/5' : ''"></span>
+            </span>
+                </div>
+
+                <!-- 🔥 ADVANTAGES & DISADVANTAGES -->
+                <div class="review-pros-cons">
+                    <div class="review-pros" th:if="${review.advantages != null && !review.advantages.isEmpty()}">
+                        <strong>✅ Преимущества:</strong>
+                        <p th:text="${review.advantages}">Отличное качество</p>
+                    </div>
+                    <div class="review-cons" th:if="${review.disadvantages != null && !review.disadvantages.isEmpty()}">
+                        <strong>❌ Недостатки:</strong>
+                        <p th:text="${review.disadvantages}">Цена высокая</p>
+                    </div>
+                </div>
+
+                <!-- 🔥 COMMENT -->
+                <p class="review-text" th:if="${review.comment != null && !review.comment.isEmpty()}"
+                   th:text="'your comment: '+${review.comment}">Great product! Highly recommend.</p>
+
+                <!-- 🔥 IMAGES -->
+                <div class="review-images" th:if="${review.images != null && !review.images.isEmpty()}">
+                    <img th:each="image : ${review.images}"
+                         th:src="${image.path}"
+                         alt="Review image"
+                         class="review-image">
+                </div>
+
+                <!-- 🔥 SELLER REPLY -->
+                <div class="seller-reply" th:if="${review.replyToReview != null}">
+                    <div class="reply-header">
+                        <i class="fas fa-reply"></i>
+                        <strong>Ответ продавца:</strong>
+                    </div>
+                    <p class="reply-text" th:text="${review.replyToReview.reply}">Спасибо за отзыв!</p>
+                    <span class="reply-date" th:text="${#temporals.format(review.replyToReview.createdAt, 'yyyy/MM/dd HH:mm:ss')}">2025/11/30 15:30:00</span>
+                </div>
+
+                <div class="review-date" th:text="${#temporals.format(review.createdAt, 'yyyy/MM/dd HH:mm:ss')}">2025/11/30 14:23:45</div>
+            </div>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(filteredReviews)}">
                 <h2>Здесь пусто</h2>
-                <p>У вас пока нет отзывов</p>
+                <p th:text="${reviewFilter == 'replied'} ? 'У вас нет отзывов с ответом продавца' :
+                     (${reviewFilter == 'unreplied'} ? 'У вас нет отзывов без ответа' : 'У вас пока нет отзывов')">У вас пока нет отзывов</p>
             </div>
         </div>
-
-        <!-- Profile Section -->
+        <!-- 🔥 PROFILE -->
         <div id="profile" class="content-section">
             <h2 style="font-size: 32px; font-weight: 600; margin-bottom: 24px;">Профиль</h2>
-
             <div class="profile-card">
                 <div class="profile-row">
                     <span class="profile-label">Имя пользователя:</span>
@@ -1199,114 +1271,485 @@
     </main>
 </div>
 
+<!-- 🔥 REVIEW MODAL -->
+<div class="modal-overlay" id="reviewModal">
+    <div class="review-modal">
+        <div class="modal-header">
+            <h2>Оставить отзыв</h2>
+            <button class="modal-close" onclick="closeReviewModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="product-info">
+                <img src="/images/placeholder.jpg" alt="Product" id="modalProductImage">
+                <div>
+                    <h3 id="modalProductName">Product Name</h3>
+                </div>
+            </div>
+
+            <div class="rating-section">
+                <label>Оценка товара <span style="color: #ef4444;">*</span></label>
+                <div class="star-rating" id="starRating">
+                    <i class="far fa-star" data-rating="1" onclick="setRating(1)"></i>
+                    <i class="far fa-star" data-rating="2" onclick="setRating(2)"></i>
+                    <i class="far fa-star" data-rating="3" onclick="setRating(3)"></i>
+                    <i class="far fa-star" data-rating="4" onclick="setRating(4)"></i>
+                    <i class="far fa-star" data-rating="5" onclick="setRating(5)"></i>
+                </div>
+                <small id="ratingText">Поставьте оценку</small>
+            </div>
+
+            <div class="advantages-section">
+                <label>Преимущества</label>
+                <textarea id="reviewAdvantages" placeholder="Что вам понравилось в товаре?" maxlength="500" oninput="updateAdvantagesCount()"></textarea>
+                <div class="char-count"><span id="advantagesCount">0</span>/500</div>
+            </div>
+
+            <div class="disadvantages-section">
+                <label>Недостатки</label>
+                <textarea id="reviewDisadvantages" placeholder="Что можно улучшить?" maxlength="500" oninput="updateDisadvantagesCount()"></textarea>
+                <div class="char-count"><span id="disadvantagesCount">0</span>/500</div>
+            </div>
+
+            <div class="comment-section">
+                <label>Ваш отзыв <span style="color: #ef4444;">*</span></label>
+                <textarea id="reviewComment" placeholder="Расскажите о своих впечатлениях..." maxlength="1000" oninput="updateCharCount()"></textarea>
+                <div class="char-count"><span id="charCount">0</span>/1000</div>
+            </div>
+
+            <div class="image-section">
+                <label>Фотографии товара (необязательно)</label>
+                <div class="image-upload-area" onclick="document.getElementById('imageInput').click()">
+                    <i class="fas fa-camera"></i>
+                    <p>Нажмите для загрузки фото</p>
+                    <small>До 6 фотографий, максимум 5MB каждая</small>
+                </div>
+                <input type="file" id="imageInput" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+                <div class="image-preview-container" id="imagePreviewContainer"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeReviewModal()">Отмена</button>
+            <button class="btn-submit" id="submitReviewBtn" onclick="submitReview()" disabled>
+                <i class="fas fa-paper-plane"></i> Отправить отзыв
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 🔥 PAYMENT MODAL -->
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePaymentModal()">&times;</span>
+        <h2><i class="fas fa-credit-card"></i> Оплата заказа</h2>
+        <div class="payment-info">
+            <div class="info-row">
+                <span class="info-label">ID заказа:</span>
+                <span class="info-value" id="modalOrderId">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Сумма к оплате:</span>
+                <span class="info-value" id="modalAmount">—</span>
+            </div>
+        </div>
+
+        <form id="paymentForm" onsubmit="submitPayment(event)">
+            <div class="form-group">
+                <label>Номер карты <span style="color: #ef4444;">*</span></label>
+                <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" required oninput="formatCardNumber(this)">
+                <span class="error-message" id="cardError"></span>
+            </div>
+            <div class="form-group">
+                <label>Срок действия <span style="color: #ef4444;">*</span></label>
+                <input type="text" id="expireDate" placeholder="MM/YY" maxlength="5" required oninput="formatExpireDate(this)">
+                <span class="error-message" id="expireError"></span>
+            </div>
+            <button type="submit" class="btn-submit" id="paymentSubmitBtn">
+                <i class="fas fa-lock"></i> Оплатить
+            </button>
+        </form>
+
+        <div id="verificationSection" style="display: none;">
+            <div class="verification-message">
+                <i class="fas fa-check-circle"></i>
+                <strong>Код отправлен!</strong><br>
+                Проверьте SMS на вашем номере
+            </div>
+            <div class="form-group">
+                <label>Код подтверждения <span style="color: #ef4444;">*</span></label>
+                <input type="text" id="verificationCode" placeholder="0000" maxlength="4" required oninput="formatVerificationCode(this)">
+                <span class="error-message" id="verifyError"></span>
+            </div>
+            <div class="timer-container">
+                <span class="timer-text">Код действителен: <span id="timer">01:00</span></span>
+            </div>
+            <button id="verifyBtn" class="btn-submit" onclick="verifyCode()">
+                <i class="fas fa-check"></i> Подтвердить оплату
+            </button>
+            <button id="resendBtn" class="btn-resend" onclick="resendCode()" style="display: none;">
+                <i class="fas fa-redo"></i> Отправить код повторно
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 🔥 TOAST -->
+<div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage">Success!</span>
+</div>
+
 <script>
+    // 🔥 GLOBAL STATE
+    let currentRating = 0;
+    let uploadedImages = [];
+    let currentProductId = null;
     let currentOrderId = null;
     let timerInterval = null;
     let timeLeft = 60;
 
+    // 🔥 CATEGORIES
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.categories-sidebar');  // SPECIFIC TARGET
+        const overlay = document.querySelector('.sidebar-overlay');
+        const isActive = sidebar.classList.contains('active');
+
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+
+        if (!isActive) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+            // Reset categories only
+            document.querySelectorAll('.category-link, .subcategory-link').forEach(link => link.classList.remove('active'));
+            document.querySelectorAll('.subcategory-menu, .subsubcategory-menu').forEach(menu => menu.classList.remove('active'));
+        }
+    }
+
+    function toggleCategory(el) {
+        // Reset all
+        document.querySelectorAll('.category-link').forEach(link => link.classList.remove('active'));
+        document.querySelectorAll('.subcategory-menu, .subsubcategory-menu').forEach(menu => menu.classList.remove('active'));
+        document.querySelectorAll('.subcategory-link').forEach(link => link.classList.remove('active'));
+
+        // Activate current
+        el.classList.add('active');
+        const index = el.dataset.index;
+        document.getElementById('subcategory-menu-' + index)?.classList.add('active');
+    }
+
+    function toggleSubCategory(el) {
+        document.querySelectorAll('.subcategory-link').forEach(link => link.classList.remove('active'));
+        document.querySelectorAll('.subsubcategory-menu').forEach(menu => menu.classList.remove('active'));
+
+        el.classList.add('active');
+        const catIndex = el.dataset.catIndex;
+        const index = el.dataset.index;
+        document.getElementById('subsubcategory-menu-' + catIndex + '-' + index)?.classList.add('active');
+    }
+
+    function sendCategoryToBackend(el) {
+        const categoryName = el.dataset.name;
+        window.location.href = `/?categoryName=${encodeURIComponent(categoryName)}`;
+    }
+
+    function sendSubCategoryToBackend(el) {
+        const subCategoryName = el.dataset.name;
+        window.location.href = `/?subCategoryName=${encodeURIComponent(subCategoryName)}`;
+    }
+
+    // 🔥 REVIEW MODAL
+    function openReviewModal(button) {
+        currentProductId = button.getAttribute('data-product-id');
+        currentOrderId = button.getAttribute('data-order-id');
+        document.getElementById('modalProductName').textContent = button.getAttribute('data-product-name');
+        document.getElementById('modalProductImage').src = button.getAttribute('data-product-image') || '/images/placeholder.jpg';
+        resetReviewForm();
+        document.getElementById('reviewModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeReviewModal() {
+        document.getElementById('reviewModal').classList.remove('active');
+        document.body.style.overflow = 'auto';
+        resetReviewForm();
+    }
+
+    // 🔥 PRESERVE ACTIVE SECTION WHEN FILTERING
+    function filterReviews(filter) {
+        // Get current active section
+        const activeSection = document.querySelector('.content-section.active').id;
+        // Add current section to URL to preserve it
+        window.location.href = `?reviewFilter=${filter}&activeSection=${activeSection}`;
+    }
+
+    function filterOrders(filter) {
+        document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+        // Get current active section
+        const activeSection = document.querySelector('.content-section.active').id;
+        // Add current section to URL to preserve it
+        window.location.href = `?filter=${filter}&activeSection=${activeSection}`;
+    }
+
+    // 🔥 SET ACTIVE SECTION ON PAGE LOAD
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeSection = urlParams.get('activeSection');
+
+        if (activeSection) {
+            // Remove active from all
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Add active to correct section
+            const targetSection = document.getElementById(activeSection);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            // Add active to nav item
+            const navItem = document.querySelector(`[onclick="showSection('${activeSection}')"]`);
+            if (navItem) {
+                navItem.classList.add('active');
+            }
+        }
+    });
+
+    function setRating(rating) {
+        currentRating = rating;
+        const stars = document.querySelectorAll('#starRating i');
+        const texts = ['', 'Очень плохо', 'Плохо', 'Нормально', 'Хорошо', 'Отлично!'];
+
+        stars.forEach((star, index) => {
+            star.className = index < rating ? 'fas fa-star' : 'far fa-star';
+            star.style.color = index < rating ? '#f59e0b' : '#d1d5db';
+        });
+
+        const ratingText = document.getElementById('ratingText');
+        ratingText.textContent = texts[rating];
+        ratingText.style.color = rating >= 4 ? '#10b981' : rating >= 3 ? '#f59e0b' : '#ef4444';
+        updateSubmitButton();
+    }
+
+    function updateCharCount() {
+        const text = document.getElementById('reviewComment').value;
+        document.getElementById('charCount').textContent = text.length;
+        updateSubmitButton();
+    }
+
+    function updateAdvantagesCount() {
+        document.getElementById('advantagesCount').textContent = document.getElementById('reviewAdvantages').value.length;
+    }
+
+    function updateDisadvantagesCount() {
+        document.getElementById('disadvantagesCount').textContent = document.getElementById('reviewDisadvantages').value.length;
+    }
+
+    function updateSubmitButton() {
+        const submitBtn = document.getElementById('submitReviewBtn');
+        const hasRating = currentRating > 0;
+        const hasComment = document.getElementById('reviewComment').value.trim().length >= 10;
+        submitBtn.disabled = !(hasRating && hasComment);
+    }
+
+    function resetReviewForm() {
+        currentRating = 0;
+        uploadedImages = [];
+
+        // Reset stars
+        document.querySelectorAll('#starRating i').forEach(star => {
+            star.className = 'far fa-star';
+            star.style.color = '#d1d5db';
+        });
+
+        // Reset textareas
+        ['reviewAdvantages', 'reviewDisadvantages', 'reviewComment'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+
+        // Reset counters
+        ['advantagesCount', 'disadvantagesCount', 'charCount'].forEach(id => {
+            document.getElementById(id).textContent = '0';
+        });
+
+        document.getElementById('ratingText').textContent = 'Поставьте оценку';
+        document.getElementById('ratingText').style.color = '#6b7280';
+        document.getElementById('imagePreviewContainer').innerHTML = '';
+        updateSubmitButton();
+    }
+
+    function handleImageUpload(event) {
+        const files = Array.from(event.target.files);
+        if (uploadedImages.length + files.length > 6) return showToast('Максимум 6 фото', 'error');
+
+        files.forEach(file => {
+            if (file.size > 5 * 1024 * 1024) return showToast('Файл > 5MB', 'error');
+            const reader = new FileReader();
+            reader.onload = e => {
+                uploadedImages.push({ file, dataUrl: e.target.result });
+                renderImagePreviews();
+            };
+            reader.readAsDataURL(file);
+        });
+        event.target.value = '';
+    }
+
+    function renderImagePreviews() {
+        const container = document.getElementById('imagePreviewContainer');
+        container.innerHTML = uploadedImages.map((img, index) => `
+            <div class="image-preview">
+                <img src="${img.dataUrl}" alt="Preview">
+                <button class="remove-image" onclick="removeImage(${index})">&times;</button>
+            </div>
+        `).join('');
+    }
+
+    function removeImage(index) {
+        uploadedImages.splice(index, 1);
+        renderImagePreviews();
+    }
+
+    async function submitReview() {
+        if (currentRating === 0) return showToast('⭐ Поставьте оценку', 'error');
+        const comment = document.getElementById('reviewComment').value.trim();
+        if (comment.length < 10) return showToast('Отзыв слишком короткий', 'error');
+
+        const submitBtn = document.getElementById('submitReviewBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
+
+        try {
+            const formData = new FormData();
+            formData.append('productId', currentProductId);
+            formData.append('orderId', currentOrderId || '');
+            formData.append('rating', currentRating);
+            formData.append('comment', comment);
+            formData.append('advantages', document.getElementById('reviewAdvantages').value.trim());
+            formData.append('disadvantages', document.getElementById('reviewDisadvantages').value.trim());
+            uploadedImages.forEach(img => formData.append('images', img.file));
+
+            const response = await fetch('/api/reviews/add', { method: 'POST', body: formData });
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showToast('✅ Отзыв отправлен!', 'success');
+                closeReviewModal();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.message || '❌ Ошибка', 'error');
+            }
+        } catch (error) {
+            showToast('❌ Ошибка соединения', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Отправить отзыв';
+        }
+    }
+
+    // 🔥 PAYMENT MODAL
     function openPaymentModal(button) {
-        const orderId = button.getAttribute('data-order-id');
+        currentOrderId = button.getAttribute('data-order-id');
         const amount = button.getAttribute('data-amount');
+        document.getElementById('modalOrderId').textContent = `#${currentOrderId}`;
+        document.getElementById('modalAmount').textContent = `${amount} сум`;
 
-        currentOrderId = orderId;
-
-        document.getElementById('modalOrderId').textContent = orderId;
-        document.getElementById('modalAmount').textContent = amount + ' сум';
-        document.getElementById('paymentModal').style.display = 'block';
-
-        // Reset form and show card details
         document.getElementById('paymentForm').reset();
         document.getElementById('paymentForm').style.display = 'block';
         document.getElementById('verificationSection').style.display = 'none';
-        document.getElementById('cardError').textContent = '';
-        document.getElementById('expireError').textContent = '';
+        ['cardError', 'expireError', 'verifyError'].forEach(id => {
+            document.getElementById(id).textContent = '';
+        });
 
-        // Clear any existing timer
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
+        document.getElementById('paymentModal').classList.add('show');
+        document.body.style.overflow = 'hidden';
     }
 
     function closePaymentModal() {
-        document.getElementById('paymentModal').style.display = 'none';
-        currentOrderId = null;
-
-        // Clear timer
+        document.getElementById('paymentModal').classList.remove('show');
+        document.body.style.overflow = 'auto';
         if (timerInterval) {
             clearInterval(timerInterval);
             timerInterval = null;
         }
-
-        // Reset views
         document.getElementById('paymentForm').style.display = 'block';
         document.getElementById('verificationSection').style.display = 'none';
-    }
-
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-        const modal = document.getElementById('paymentModal');
-        if (event.target === modal) {
-            closePaymentModal();
-        }
+        document.getElementById('verificationCode').value = '';
     }
 
     function formatCardNumber(input) {
-        let value = input.value.replace(/\s/g, '');
-        value = value.replace(/\D/g, '');
+        let value = input.value.replace(/\s/g, '').replace(/\D/g, '');
         value = value.substring(0, 16);
-
-        let formatted = value.match(/.{1,4}/g);
-        input.value = formatted ? formatted.join(' ') : value;
-
+        input.value = value.match(/.{1,4}/g)?.join(' ') || value;
         document.getElementById('cardError').textContent = '';
     }
 
     function formatExpireDate(input) {
         let value = input.value.replace(/\D/g, '');
-
-        if (value.length >= 2) {
-            value = value.substring(0, 2) + '/' + value.substring(2, 4);
-        }
-
+        if (value.length >= 2) value = value.substring(0, 2) + '/' + value.substring(2, 4);
         input.value = value;
         document.getElementById('expireError').textContent = '';
     }
 
     function formatVerificationCode(input) {
         let value = input.value.replace(/\D/g, '');
-        value = value.substring(0, 6);
-        input.value = value;
+        input.value = value.substring(0, 4);
         document.getElementById('verifyError').textContent = '';
     }
 
-    function validateCardNumber(cardNumber) {
-        const cleaned = cardNumber.replace(/\s/g, '');
-        return cleaned.length === 16 && /^\d+$/.test(cleaned);
-    }
+    async function submitPayment(event) {
+        event.preventDefault();
+        const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+        const expireDate = document.getElementById('expireDate').value;
 
-    function validateExpireDate(expireDate) {
-        const pattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
-        if (!pattern.test(expireDate)) {
-            return false;
+        if (cardNumber.length !== 16) {
+            document.getElementById('cardError').textContent = 'Введите корректный номер карты (16 цифр)';
+            return;
+        }
+        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expireDate)) {
+            document.getElementById('expireError').textContent = 'Введите срок действия (MM/YY)';
+            return;
         }
 
-        const [month, year] = expireDate.split('/');
-        const expiry = new Date(2000 + parseInt(year), parseInt(month));
-        const today = new Date();
+        const submitBtn = document.getElementById('paymentSubmitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Проверка...';
 
-        return expiry > today;
+        try {
+            const response = await fetch('/api/orders/pay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: currentOrderId, cardNumber, expireDate })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                document.getElementById('paymentForm').style.display = 'none';
+                document.getElementById('verificationSection').style.display = 'block';
+                document.getElementById('verificationCode').focus();
+                startTimer();
+                showToast('✅ Код отправлен!', 'success');
+            } else {
+                showToast('❌ ' + (data.message || 'Ошибка'), 'error');
+            }
+        } catch (error) {
+            showToast('❌ Ошибка соединения', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-lock"></i> Оплатить';
+        }
     }
 
     function startTimer() {
         timeLeft = 60;
-        document.getElementById('timer').textContent = '01:00';
         document.getElementById('verifyBtn').style.display = 'block';
         document.getElementById('resendBtn').style.display = 'none';
 
         timerInterval = setInterval(() => {
             timeLeft--;
-
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
             document.getElementById('timer').textContent =
@@ -1314,224 +1757,154 @@
 
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                timerInterval = null;
                 document.getElementById('verifyBtn').style.display = 'none';
                 document.getElementById('resendBtn').style.display = 'block';
-                document.getElementById('timer').textContent = '00:00';
             }
         }, 1000);
     }
 
-    function submitPayment(event) {
-        event.preventDefault();
-
-        const cardNumber = document.getElementById('cardNumber').value;
-        const expireDate = document.getElementById('expireDate').value;
-
-        let isValid = true;
-
-        if (!validateCardNumber(cardNumber)) {
-            document.getElementById('cardError').textContent = 'Введите корректный номер карты (16 цифр)';
-            isValid = false;
-        }
-
-        if (!validateExpireDate(expireDate)) {
-            document.getElementById('expireError').textContent = 'Введите корректный срок действия (MM/YY)';
-            isValid = false;
-        }
-
-        if (!isValid) {
-            return;
-        }
-
-        const paymentData = {
-            orderId: currentOrderId,
-            cardNumber: cardNumber.replace(/\s/g, ''),
-            expireDate: expireDate
-        };
-
-        const submitBtn = event.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Обработка...';
-
-        // Send card details to backend
-        fetch('/api/orders/pay', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(paymentData)
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Hide card form, show verification section
-                    document.getElementById('paymentForm').style.display = 'none';
-                    document.getElementById('verificationSection').style.display = 'block';
-                    document.getElementById('verificationCode').value = '';
-                    document.getElementById('verifyError').textContent = '';
-
-                    // Start the timer
-                    startTimer();
-                } else {
-                    alert('Ошибка: ' + (data.message || 'Попробуйте снова'));
-                }
-            })
-            .catch(error => {
-                console.error('Payment error:', error);
-                alert('Произошла ошибка. Попробуйте позже.');
-            })
-            .finally(() => {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Оплатить';
-            });
-    }
-
-    function verifyCode() {
+    async function verifyCode() {
         const code = document.getElementById('verificationCode').value;
-
-        if (code.length !== 6) {
-            document.getElementById('verifyError').textContent = 'Введите 6-значный код';
+        if (code.length !== 4) {
+            document.getElementById('verifyError').textContent = 'Введите 4-значный код';
             return;
         }
 
         const verifyBtn = document.getElementById('verifyBtn');
         verifyBtn.disabled = true;
-        verifyBtn.textContent = 'Проверка...';
+        verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Проверка...';
 
-        // Send verification code to backend
-        fetch('/api/orders/verify', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                orderId: currentOrderId,
-                code: code
-            })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Оплата прошла успешно!');
-                    closePaymentModal();
-                    location.reload();
-                } else {
-                    document.getElementById('verifyError').textContent = data.message || 'Неверный код';
-                }
-            })
-            .catch(error => {
-                console.error('Verification error:', error);
-                alert('Произошла ошибка. Попробуйте позже.');
-            })
-            .finally(() => {
-                verifyBtn.disabled = false;
-                verifyBtn.textContent = 'Подтвердить';
+        try {
+            const response = await fetch('/api/orders/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: currentOrderId, code })
             });
+            const data = await response.json();
+
+            if (data.success) {
+                showToast('✅ Оплата успешна!', 'success');
+                setTimeout(() => { closePaymentModal(); location.reload(); }, 1500);
+            } else {
+                document.getElementById('verifyError').textContent = data.message || 'Неверный код';
+            }
+        } catch (error) {
+            showToast('❌ Ошибка', 'error');
+        } finally {
+            verifyBtn.disabled = false;
+            verifyBtn.innerHTML = '<i class="fas fa-check"></i> Подтвердить оплату';
+        }
     }
 
-    function resendCode() {
+    async function resendCode() {
         const resendBtn = document.getElementById('resendBtn');
         resendBtn.disabled = true;
-        resendBtn.textContent = 'Отправка...';
+        resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
 
-        // Request new code from backend
-        fetch('/api/orders/resend-code', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                orderId: currentOrderId
-            })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('verificationCode').value = '';
-                    document.getElementById('verifyError').textContent = '';
-                    startTimer();
-                } else {
-                    alert('Ошибка: ' + (data.message || 'Не удалось отправить код'));
-                }
-            })
-            .catch(error => {
-                console.error('Resend error:', error);
-                alert('Произошла ошибка. Попробуйте позже.');
-            })
-            .finally(() => {
-                resendBtn.disabled = false;
-                resendBtn.textContent = 'Отправить код повторно';
+        try {
+            const response = await fetch('/api/orders/resend-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: currentOrderId })
             });
-    }
-</script>
+            const data = await response.json();
 
-<script th:inline="javascript">
-    // Navigation
-    function showSection(sectionId) {
-        document.querySelectorAll('.content-section').forEach(section => {
-            section.classList.remove('active');
-        });
-        document.getElementById(sectionId).classList.add('active');
-
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        event.target.closest('.nav-item').classList.add('active');
-    }
-
-    // Filter orders
-    function filterOrders(filter) {
-        document.querySelectorAll('.filter-tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        event.target.classList.add('active');
-
-        // Send request to server to filter orders
-        window.location.href = `?filter=${filter}`;
+            if (data.success) {
+                document.getElementById('verificationCode').value = '';
+                document.getElementById('verifyError').textContent = '';
+                startTimer();
+                showToast('✅ Новый код отправлен!', 'success');
+            } else {
+                showToast('❌ ' + (data.message || 'Ошибка'), 'error');
+            }
+        } catch (error) {
+            showToast('❌ Ошибка соединения', 'error');
+        } finally {
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = '<i class="fas fa-redo"></i> Отправить код повторно';
+        }
     }
 
-    // Toggle order items
-    function toggleItems(element) {
-        const itemsList = element.nextElementSibling;
-        const icon = element.querySelector('.dropdown-icon');
+    // 🔥 UTILITY FUNCTIONS
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        toast.className = `toast ${type}`;
+        toastMessage.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
 
+    function toggleItems(header) {
+        const itemsList = header.nextElementSibling;
+        const icon = header.querySelector('.dropdown-icon');
         itemsList.classList.toggle('open');
         icon.classList.toggle('open');
     }
 
-    // Copy order ID
     function copyOrderId(element) {
-        const orderId = element.previousElementSibling.textContent.replace('ID заказа ', '');
+        const orderId = element.previousElementSibling.querySelector('span').textContent;
         navigator.clipboard.writeText(orderId).then(() => {
-            element.textContent = '✓';
-            setTimeout(() => {
-                element.textContent = '📋';
-            }, 2000);
+            showToast('ID скопирован!', 'success');
         });
     }
 
-    // Sample data for demonstration
+    function showSection(sectionId) {
+        // Hide all sections
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+        });
+
+        // Remove active from all nav items
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        // Show selected section
+        document.getElementById(sectionId).classList.add('active');
+
+        // Add active to clicked nav item
+        event.currentTarget.classList.add('active');
+
+        // ✅ PRESERVE IN URL (optional but recommended)
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('activeSection', sectionId);
+        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+    }
+
+
+
+    // 🔥 INITIALIZATION
     document.addEventListener('DOMContentLoaded', function() {
-        // If using static data for demo, uncomment below
-        /*
-        const sampleOrders = [
-            {
-                id: '56806718',
-                status: 'RETURNED',
-                statusText: 'Возвращён',
-                updateTime: '2025-05-05 09:53',
-                shelfLife: 'до 4 мая',
-                pickupAddress: 'г. Ташкент, Юнусабадский район, проспект Амира Темура, дом 70',
-                orderDate: 'понедельник, 28 апреля 2025 22:24',
-                totalPrice: '24 000 сум',
-                hasCourier: false,
-                items: [
-                    { productName: 'Product 1', quantity: 1, price: '24 000' }
-                ]
+        // Modal outside click
+        [document.getElementById('reviewModal'), document.getElementById('paymentModal')].forEach(modal => {
+            if (modal) {
+                modal.addEventListener('click', e => {
+                    if (e.target === e.currentTarget) {
+                        if (modal.id === 'reviewModal') closeReviewModal();
+                        else closePaymentModal();
+                    }
+                });
             }
-        ];
-        */
+        });
+
+        // Escape key
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                if (document.getElementById('reviewModal').classList.contains('active')) closeReviewModal();
+                if (document.getElementById('paymentModal').classList.contains('show')) closePaymentModal();
+            }
+        });
+
+        // Review form listeners
+        ['reviewComment', 'reviewAdvantages', 'reviewDisadvantages'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', () => {
+                if (id === 'reviewComment') updateCharCount();
+                else if (id === 'reviewAdvantages') updateAdvantagesCount();
+                else updateDisadvantagesCount();
+            });
+        });
     });
 </script>
 </body>

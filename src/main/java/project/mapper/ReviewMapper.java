@@ -34,6 +34,12 @@ public class ReviewMapper {
         userShortDto.setUsername(save.getCustomer().getUsername());
         userShortDto.setId(save.getCustomer().getId());
         reviewDto.setSender(userShortDto);
+        reviewDto.setCreatedAt(save.getCreatedAt());
+        reviewDto.setImages(save.getImages());
+        reviewDto.setAdvantages(save.getAdvantages());
+        reviewDto.setDisadvantages(save.getDisadvantages());
+        reviewDto.setReplyToReview(save.getReplyToReview());
+        reviewDto.setIsReplied(save.getIsReplied());
         return reviewDto;
     }
 

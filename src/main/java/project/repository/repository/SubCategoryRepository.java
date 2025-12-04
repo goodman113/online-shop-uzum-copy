@@ -23,4 +23,6 @@ public interface SubCategoryRepository extends JpaRepository<SubCategory,Long> {
 
 
     Optional<SubCategory> findSubCategoryByIdIsAndDeleted(Long id, boolean b);
+
+    List<SubCategory> findAllByCategory_Name(String categoryName);
 }

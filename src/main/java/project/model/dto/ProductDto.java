@@ -10,7 +10,6 @@ import java.util.List;
 @Setter
 @Getter
 @NoArgsConstructor
-@ToString
 @AllArgsConstructor
 public class ProductDto {
     private Long id;
@@ -25,4 +24,21 @@ public class ProductDto {
     private SubSubCategoryDto subSubCategoryDto;
     private Long soldQuantity;
     private List<ReviewDto> reviews;
+
+    @Override
+    public String toString() {
+        return "ProductDto{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", price=" + price +
+                ", stockQuantity=" + stockQuantity +
+                ", vendorId=" + vendorId +
+                ", imageProducts=" + imageProducts +
+                ", oldPrice=" + oldPrice +
+                ", averageRating=" + averageRating +
+                ", soldQuantity=" + soldQuantity +
+                ", reviews=" + reviews +
+                '}';
+    }
 }

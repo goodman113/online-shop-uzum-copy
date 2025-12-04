@@ -13,7 +13,7 @@ import project.model.User;
 import project.model.enums.OrderStatus;
 import project.model.request.AddToCartRequest;
 import project.repository.repository.OrderRepository;
-import project.service.GuestCartService;
+import project.redis.GuestCartService;
 import project.service.OrderItemService;
 import project.service.OrderService;
 import project.service.UserService;

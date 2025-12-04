@@ -8,7 +8,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+
 public class CategoryDto {
     private Long id;
     private String name;

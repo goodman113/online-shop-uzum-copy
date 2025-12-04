@@ -7,7 +7,6 @@ import project.model.enums.Role;
 @Setter
 @Getter
 @NoArgsConstructor
-@ToString
 @AllArgsConstructor
 public class UserCreateDto {
     private String username;

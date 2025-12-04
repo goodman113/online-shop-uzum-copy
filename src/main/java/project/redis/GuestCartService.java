@@ -1,4 +1,4 @@
-package project.service;
+package project.redis;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import project.model.User;
+import project.service.OrderItemService;
 
 import java.time.Duration;
 import java.util.Map;
@@ -49,12 +50,9 @@ public class GuestCartService {
         cookie.setPath("/");
         response.addCookie(cookie);
         return cartId;
-
     }
 
     public void mergeGuestCartIntoUser(String cartId, User user) {
-        System.out.println("cartId:"+cartId);
-        System.out.println("userId:"+user.getId());
         Map<Object, Object> guestItems =getCart(cartId);
 
         for (var entry : guestItems.entrySet()) {

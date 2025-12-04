@@ -1,5 +1,6 @@
 package project.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import project.model.base.BaseEntity;
@@ -23,6 +24,7 @@ public class Vendor extends BaseEntity {
     private boolean approved = false;
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Product> products = new ArrayList<>();
 
     // Getters and Setters

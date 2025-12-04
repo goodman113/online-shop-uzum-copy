@@ -43,7 +43,7 @@ public class OrderService  extends AbstractService
     }
 
     public List<OrderDto> getAll(String search, LocalDateTime from,  LocalDateTime to) {
-       return mapper.toDtoList(repository.findAll(search,from,to));
+       return mapper.toDtoList(repository.findAll(from,to));
     }
 
     @Override

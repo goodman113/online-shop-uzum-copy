@@ -7,5 +7,5 @@ public enum OrderStatus {
     ACCEPTED,
     PREPARING,
     READY_FOR_PICKUP,
-    TAKEN
+    TAKEN_BY_CUSTOMER
 }

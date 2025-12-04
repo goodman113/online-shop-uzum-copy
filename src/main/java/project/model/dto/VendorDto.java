@@ -9,7 +9,6 @@
     @Setter
     @Getter
     @NoArgsConstructor
-    @ToString
     @AllArgsConstructor
     public class VendorDto {
         private Long id;

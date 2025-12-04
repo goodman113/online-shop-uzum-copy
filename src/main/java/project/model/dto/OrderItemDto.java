@@ -6,7 +6,6 @@ import lombok.*;
 @Setter
 @Getter
 @NoArgsConstructor
-@ToString
 @AllArgsConstructor
 public class OrderItemDto {
     private Long id;

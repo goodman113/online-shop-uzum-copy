@@ -25,6 +25,7 @@ import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import project.hendler.CustomSuccessHandler;
 import project.model.User;
 import project.repository.repository.UserRepository;
 
@@ -36,8 +37,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @EnableMethodSecurity
 public class SecurityConfig {
-    final UserRepository userRepository;
     final UserDetailsService userDetailsService;
+    final CustomSuccessHandler customSuccessHandler;
     final DataSource dataSource;
 
     public PersistentTokenRepository persistentTokenRepository() {
@@ -60,7 +61,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/order","/wishlist").authenticated()
+                        .requestMatchers("/orders","checkout/","/api/reviews").authenticated()
                         .requestMatchers(
                                 "/**"
                         ).permitAll()
@@ -68,7 +69,7 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/", true) // <- use defaultSuccessUrl instead of successForwardUrl
+                        .successHandler(customSuccessHandler)
                         .permitAll()
                 )
                 .logout(logout -> logout

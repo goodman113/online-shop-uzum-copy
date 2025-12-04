@@ -5,6 +5,7 @@ import project.model.enums.OrderItemStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,4 +18,16 @@ public interface OrderItemRepository extends JpaRepository<OrderItem,Long> {
 
     @Query("select sum(o.quantity) from OrderItem o where o.order.id = :id")
     Integer getAllQuantity(Long id);
+
+    @Query("""
+    select o
+    from OrderItem o
+    where o.status = :status
+      and o.updatedAt >= :date
+""")
+    List<OrderItem> findOrderItemsByStatusAndUpdatedAt(OrderItemStatus status, LocalDateTime date);
+
+    List<OrderItem> findOrderItemsByProductVendor_Id(Long productId);
+
+    List<OrderItem> findOrderItemsByProductVendor_IdAndStatus(Long productId, OrderItemStatus status);
 }

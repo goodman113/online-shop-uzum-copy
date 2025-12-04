@@ -24,13 +24,12 @@ import project.model.dto.IdNameDto;
 import project.model.dto.ProductDto;
 import project.model.dto.SubCategoryDto;
 import project.model.dto.SubSubCategoryDto;
+import project.model.enums.OrderItemStatus;
 import project.repository.repository.*;
 import project.service.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
 
 @RequestMapping("/vendor")
 @Controller
@@ -47,7 +46,7 @@ public class VendorController {
     final SubCategoryMapper subCategoryMapper;
     final UserMapper userMapper;
     final ImageService imageService;
-
+    private final OrderItemRepository orderItemRepository;
 
 
     @GetMapping("/profile")
@@ -62,6 +61,25 @@ public class VendorController {
         return "vendor/vendorInfo";
     }
 
+    @GetMapping("/orders")
+    public String orders(Model model,HttpServletRequest request) {
+        User user = userService.findCurrentUser();
+
+        List<OrderItem> items = orderItemRepository.findOrderItemsByProductVendor_IdAndStatus(user.getVendorProfile().getId(), OrderItemStatus.PURCHASED);
+        double totalRevenue = items.stream()
+                .mapToDouble(i -> i.getPrice() * i.getQuantity())
+                .sum();
+
+        int itemsSold = items.stream()
+                .mapToInt(OrderItem::getQuantity)
+                .sum();
+
+        model.addAttribute("currentWebPage", GlobalControllerAdvice.populateCurrentPage(request));
+        model.addAttribute("totalRevenue", totalRevenue);
+        model.addAttribute("itemsSold", itemsSold);
+        model.addAttribute("items",items);
+        return "vendor/orders";
+    }
     @GetMapping("/product/{id}")
     public String product(@PathVariable Long id,Model model,HttpServletRequest request) {
         Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("product was not found"));
@@ -70,6 +88,33 @@ public class VendorController {
         System.out.println("productMapper -->"+ productMapper.toDto(product));
         model.addAttribute("currentWebPage", GlobalControllerAdvice.populateCurrentPage(request));
         return "vendor/productInfo";
+    }
+
+    @PostMapping("/product/edit/{productId}")
+    public String editProduct(@PathVariable Long productId,
+                              @RequestParam Integer stockQuantity, RedirectAttributes redirectAttributes,
+                              @RequestParam BigDecimal price, Model model, HttpServletRequest request) {
+        try {
+            User user = userService.findCurrentUser();
+            Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("product was not found"));
+            if (!Objects.equals(product.getVendor().getId(), user.getVendorProfile().getId())) {
+                redirectAttributes.addFlashAttribute("error", "Failed to update product!");
+                return "redirect:/vendor/products";
+            }
+            double pricee = price.doubleValue();
+            if (pricee!=product.getPrice()) {
+                product.setOldPrice(product.getPrice());
+                product.setPrice(pricee);
+            }
+            product.setStockQuantity(product.getStockQuantity()+stockQuantity);
+            productRepository.save(product);
+            redirectAttributes.addFlashAttribute("success", "Product updated successfully!");
+            return "redirect:/vendor/products";
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to update product!");
+            return "redirect:/vendor/products";
+        }
     }
 
 
@@ -92,6 +137,7 @@ public class VendorController {
 
         return "vendor/products";
     }
+
 
     @PostMapping(value ="/product/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public String add(ProductCreateDto product,

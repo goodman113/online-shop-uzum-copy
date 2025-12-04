@@ -148,7 +148,7 @@
             <div class="review-header">
                 <div class="reviewer" th:text="${review.sender?.username}">Azizbek</div>
                 <div class="rating"
-                     th:text="'★★★★★'.substring(0, ${review.rating}) + '☆☆☆☆☆'.substring(${review.rating})">
+                     th:text="${review.rating}">
                     ★★★★★
                 </div>
             </div>

@@ -1,5 +1,6 @@
 package project.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
@@ -16,6 +17,7 @@ import project.model.base.BaseEntity;
 @Entity
 public class SubCategory extends BaseEntity {
     private String name;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JsonIgnore
     private Category category;
 }

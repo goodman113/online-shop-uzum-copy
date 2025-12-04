@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import project.model.base.BaseEntity;
 
+import java.util.List;
+
 @Entity
 @Table(name = "review")
 @Getter
@@ -27,5 +29,16 @@ public class Review extends BaseEntity {
     @JoinColumn(name = "customer_id")
     private User customer;
 
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
+    private List<ImageForReview> images;
+
+    private String advantages;
+
+    private String disadvantages;
+
+    @OneToOne
+    private ReplyToReview replyToReview;
+
+    private Boolean isReplied;
     // Getters and Setters
 }

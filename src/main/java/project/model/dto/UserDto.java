@@ -11,7 +11,6 @@ import java.util.List;
 @Setter
 @Getter
 @NoArgsConstructor
-@ToString
 @AllArgsConstructor
 public class UserDto {
     private Long id;

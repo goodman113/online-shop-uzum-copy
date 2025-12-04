@@ -8,7 +8,6 @@ import java.util.List;
 @Setter
 @Getter
 @NoArgsConstructor
-@ToString
 @AllArgsConstructor
 public class SubCategoryDto {
     private Long id;

@@ -5,7 +5,6 @@ import lombok.*;
 @Setter
 @Getter
 @NoArgsConstructor
-@ToString
 @AllArgsConstructor
 public class VendorCreateDto {
     private String shopName;

@@ -6,6 +6,64 @@
     <title>Ali Market - Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        .wishlist-badge {
+            position: relative !important; /* ✅ FORCE */
+        }
+        .wishlist-badge::after {
+            content: attr(data-count) !important; /* ✅ FORCE SHOW */
+            position: absolute !important;
+            top: -8px !important;
+            right: -8px !important;
+            background: #7c3aed !important;
+            color: #fff !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            min-width: 18px !important;
+            height: 18px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            line-height: 1 !important;
+            padding: 0 4px !important;
+            box-shadow: 0 2px 6px rgba(124, 58, 237, 0.4) !important;
+            z-index: 10 !important;
+            animation: pulse 2s infinite !important;
+        }
+        .wishlist-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 36px;
+            height: 36px;
+            background: #fff;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: all 0.3s;
+        }
+
+        .wishlist-btn i {
+            font-size: 18px;
+            color: #d1d5db; /* Default empty heart */
+            transition: all 0.3s;
+        }
+
+        .wishlist-btn.in-wishlist i {
+            color: #ef4444; /* ✅ Filled red heart */
+        }
+
+        .wishlist-btn:hover i {
+            color: #ef4444;
+        }
+
+        .wishlist-btn.in-wishlist:hover i {
+            color: #dc2626;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
 
@@ -28,14 +86,13 @@
 
         /* Right Nav */
         .right-nav { display: flex; align-items: center; gap: 25px; }
-        .nav-icon { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #374151; cursor: pointer; transition: color 0.3s; text-decoration: none; }
+        .nav-icon { position: relative; /* ✅ REQUIRED */ display: flex; flex-direction: column; align-items: center; gap: 4px; color: #374151; cursor: pointer; transition: color 0.3s; text-decoration: none; }
         .nav-icon:hover { color: #7c3aed; }
         .nav-icon i { font-size: 22px; }
         .nav-icon span { font-size: 11px; font-weight: 500; }
         .cart-badge { position: relative; }
         .cart-badge::after { content: attr(data-count); position: absolute; top: -8px; right: -8px; background: #ef4444; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 50%; }
 
-        /* Sidebar */
         .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: all 0.3s; z-index: 200; }
         .sidebar-overlay.active { opacity: 1; visibility: visible; }
         .sidebar { position: fixed; top: 0; left: -320px; width: 320px; height: 100%; background: #fff; transition: left 0.3s; z-index: 201; overflow-y: auto; }
@@ -62,6 +119,22 @@
         .subsubcategory-link { display: block; padding: 12px 20px; color: #374151; text-decoration: none; transition: all 0.2s; border-bottom: 1px solid #f3f4f6; }
         .subsubcategory-link:hover { background: #7c3aed; color: #fff; }
 
+        /* New styles for clickable headers */
+        .clickable-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        .clickable-header:hover {
+            background: #7c3aed;
+            color: #fff;
+        }
+        .clickable-header i {
+            font-size: 14px;
+            opacity: 0.7;
+        }
         /* Products Grid */
         .products-section { padding: 30px 40px; }
         .section-title { font-size: 24px; font-weight: 700; color: #1f2937; margin-bottom: 25px; }
@@ -126,15 +199,25 @@
             <i class="fas fa-user"></i>
             <span>Login</span>
         </a>
-        <a href="/wishlist" class="nav-icon">
+        <a href="/orders?filter=all" class="nav-icon">
+            <i class="fas fa-box"></i>
+            <span>Orders</span>
+        </a>
+
+        <!-- ✅ CORRECT SYNTAX -->
+        <a href="/wishlist" class="nav-icon wishlist-badge"
+           th:attr="data-count=${wishlistCount}"
+           id="wishlistBadge">
             <i class="fas fa-heart"></i>
             <span>Wishlist</span>
         </a>
+
         <a href="/cart" class="nav-icon cart-badge" data-count="0" id="cartBadge">
             <i class="fas fa-shopping-cart"></i>
             <span>Cart</span>
         </a>
     </div>
+
 </header>
 <!-- Sidebar Overlay -->
 <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -153,17 +236,30 @@
                 <i class="fas fa-chevron-right"></i>
             </div>
             <div class="subcategory-menu" th:id="'subcategory-menu-' + ${catStat.index}">
-                <div class="subcategory-menu-header" th:text="${entry.key.name}">Category Name</div>
+                <!-- Make this header clickable -->
+                <div class="subcategory-menu-header clickable-header"
+                     th:data-name="${entry.key.name}"
+                     onclick="sendCategoryToBackend(this)">
+                    <span th:text="${entry.key.name}">Category Name</span>
+                    <i class="fas fa-arrow-right"></i>
+                </div>
                 <div class="subcategory-item" th:each="subCat, subStat : ${entry.value}">
                     <div class="subcategory-link" th:data-cat-index="${catStat.index}" th:data-index="${subStat.index}" th:data-name="${subCat.name}" onclick="toggleSubCategory(this)">
                         <span th:text="${subCat.name}">Phones</span>
                         <i class="fas fa-chevron-right"></i>
                     </div>
                     <div class="subsubcategory-menu" th:id="'subsubcategory-menu-' + ${catStat.index} + '-' + ${subStat.index}">
-                        <div class="subsubcategory-menu-header" th:text="${subCat.name}">SubCategory Name</div>
+                        <!-- Make this header clickable -->
+                        <div class="subsubcategory-menu-header clickable-header"
+                             th:data-name="${subCat.name}"
+                             onclick="sendSubCategoryToBackend(this)">
+                            <span th:text="${subCat.name}">SubCategory Name</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
                         <a th:each="subSubCat : ${subCat.subSubCategories}"
-                           th:href="@{/products(subSubCategoryId=${subSubCat.id})}"
-                           th:text="${subSubCat.name}" class="subsubcategory-link">Smartphones</a>
+                           th:text="${subSubCat.name}" class="subsubcategory-link"
+                           th:data-name="${subSubCat.name}"
+                            onclick="sendSubSubCategoryToBackend(this)">Smartphones</a>
                     </div>
                 </div>
             </div>
@@ -177,15 +273,25 @@
     <div class="products-grid">
         <!-- Thymeleaf loop for products -->
         <div class="product-card" th:each="product : ${products}">
-            <div class="product-image" th:onclick="'window.location.href=\'/product/' + ${product.id} + '\''">
-                <img th:src="${product.imageProducts != null && !product.imageProducts.isEmpty()} ? ${product.imageProducts[0].path} : '/images/placeholder.jpg'"
+            <div class="product-image"
+                 th:onclick="'window.location.href=\'/product/' + ${product.id} + '\''">
+                <img th:src="${product.imageProducts != null && !#lists.isEmpty(product.imageProducts)}
+                 ? ${product.imageProducts[0].path} : '/images/placeholder.jpg'"
                      th:alt="${product.name}">
-                <button class="wishlist-btn" th:data-id="${product.id}" onclick="event.stopPropagation(); toggleWishlist(this)">
-                    <i class="far fa-heart"></i>
+
+                <!-- ✅ MARKED HEART - Only for wishlist products -->
+                <button class="wishlist-btn"
+                        th:data-id="${product.id}"
+                        th:onclick="'event.stopPropagation(); toggleWishlist(this)'"
+                        th:classappend="${wishlistProductIds.contains(product.id)} ? 'in-wishlist' : ''"
+                        title="Remove from wishlist">
+                    <i th:class="${wishlistProductIds.contains(product.id)} ? 'fas fa-heart' : 'far fa-heart'"></i>
                 </button>
-                <span class="old-price-badge" th:if="${product.oldPrice != null && product.oldPrice > product.price}">
-                        SALE
-                    </span>
+
+                <span class="old-price-badge"
+                      th:if="${product.oldPrice != null && product.oldPrice > product.price}">
+        SALE
+    </span>
             </div>
             <div class="product-info">
                 <h3 class="product-name" th:text="${product.name}">Product Name</h3>
@@ -285,6 +391,87 @@
             document.querySelectorAll('.subsubcategory-menu').forEach(menu => menu.classList.remove('active'));
             document.querySelectorAll('.subcategory-link').forEach(link => link.classList.remove('active'));
         }
+    }
+
+    // Send category name to backend
+    function sendCategoryToBackend(el) {
+        const categoryName = el.dataset.name;
+
+        // Redirect to products page with category name
+        window.location.href = `/?categoryName=${encodeURIComponent(categoryName)}`;
+
+        // Alternative: Send via AJAX if you don't want to redirect
+        /*
+        fetch('/api/category', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ categoryName: categoryName })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            // Handle response
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+        */
+    }
+
+    // Send subcategory name to backend
+    function sendSubCategoryToBackend(el) {
+        const subCategoryName = el.dataset.name;
+
+        // Redirect to products page with subcategory name
+        window.location.href = `/?subCategoryName=${encodeURIComponent(subCategoryName)}`;
+
+        // Alternative: Send via AJAX if you don't want to redirect
+        /*
+        fetch('/api/subcategory', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ subCategoryName: subCategoryName })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            // Handle response
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+        */
+    }
+
+    // Send subcategory name to backend
+    function sendSubSubCategoryToBackend(el) {
+        const subCategoryName = el.dataset.name;
+
+        // Redirect to products page with subcategory name
+        window.location.href = `/?subSubCategoryName=${encodeURIComponent(subCategoryName)}`;
+
+        // Alternative: Send via AJAX if you don't want to redirect
+        /*
+        fetch('/api/subcategory', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ subCategoryName: subCategoryName })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            // Handle response
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+        */
     }
 
     function toggleWishlist(btn) {
